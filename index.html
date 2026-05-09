@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>济大校园植物图鉴 | 药用植物学实习小助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165D33',
+                        secondary: '#2E7D32',
+                        light: '#F8F9F4',
+                        muted: '#E8F5E9',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .text-balance {
+                text-wrap: balance;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light min-h-screen flex flex-col text-gray-800 font-sans">
+    <header class="bg-primary text-white p-4 shadow-md">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="bg-white/20 p-2 rounded-lg">
+                <i class="fa fa-leaf text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-yellow-300">植物学</h1>
+                <p class="text-sm opacity-90">校园植物实习教学小助手</p>
+            </div>
+        </div>
+        <div class="mt-2">
+            <p class="text-sm opacity-90" id="plantCount">共 70 种植物</p>
+            <h2 class="text-2xl font-bold text-yellow-300 mt-1">济大校园植物图鉴</h2>
+            <p class="text-sm opacity-90 mt-1">点击搜索，或按生活型、科属浏览</p>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-hidden">
+        <div id="browsePage" class="h-full flex flex-col">
+            <div class="p-4 bg-white shadow-sm">
+                <div class="relative">
+                    <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="搜索物种名、科属、拉丁名、辨识特征..." 
+                        class="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                </div>
+            </div>
+
+            <div class="px-4 py-3 bg-white border-b">
+                <div class="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-3">
+                    <button class="life-filter px-4 py-1.5 rounded-full bg-primary text-white text-sm whitespace-nowrap
+                                            font-bold text-base tracking-wide"
+                                 data-type="all">
+                        🌍</i> 全部
+                    </button>
+                    <button class="life-filter px-3 py-1.5 rounded-full bg-blue-200 hover:bg-gray-200 text-sm whitespace-nowrap
+                                            font-bold text-black-300 tracking-wide" 
+                                  data-type="乔木">
+                        🌳</i> 乔木
+                    </button>
+                    <button class="life-filter px-3 py-1.5 rounded-full bg-blue-200 hover:bg-gray-200 text-sm whitespace-nowrap
+                                            font-bold text-black-300 tracking-wide"
+                                  data-type="灌木">
+                        🌿</i> 灌木
+                    </button>
+                    <button class="life-filter px-3 py-1.5 rounded-full bg-blue-200 hover:bg-gray-200 text-sm whitespace-nowrap
+                                            font-bold text-black-300 tracking-wide"
+                                  data-type="草本">
+                        🌱</i> 草本
+                    </button>
+                    <button class="life-filter px-3 py-1.5 rounded-full bg-blue-200 hover:bg-gray-200 text-sm whitespace-nowrap
+                                            font-bold text-black-300 tracking-wide"
+                                  data-type="藤本">
+                        🍃</i> 藤本
+                    </button>
+                </div>
+
+                <p class="text-base text-gray-700 font-bold mb-3">按科筛选</p>
+                <div id="familyFilterContainer" class="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-16 grid grid-cols-1 md:grid-cols-4 gap-6" id="plantList">
+            </div>
+        </div>
+
+        <div id="favoritesPage" class="h-full hidden flex-col">
+            <div class="p-4">
+                <h2 class="text-xl font-bold text-primary">我的收藏</h2>
+                <p class="text-sm text-gray-500 mt-1">收藏的重点植物将显示在这里</p>
+            </div>
+            <div id="emptyFavorites" class="flex-1 flex flex-col items-center justify-center text-center p-4">
+                <div class="text-6xl text-gray-300 mb-4">
+                    <i class="fa fa-leaf"></i>
+                </div>
+                <h3 class="text-xl font-medium text-gray-600 mb-2">还没有收藏任何植物</h3>
+                <p class="text-gray-500 max-w-xs">浏览时点击卡片进入详情，再点击右上角书签即可收藏</p>
+            </div>
+            <div id="favoritesList" class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-6 gap-4 hidden">
+            </div>
+        </div>
+
+        <div id="mapPage" class="h-full hidden flex-col items-center justify-center p-4 text-center">
+            <div class="text-6xl text-primary mb-4">
+                <i class="fa fa-map"></i>
+            </div>
+            <h2 class="text-xl font-bold text-primary mb-2">校园植物分布地图</h2>
+            <p class="text-black-600 mb-1">此功能正在建设中</p>
+            <p class="text-gray-600 text-sm mb-6">后续将展示校园地理信息与植物分布标注<br>敬请期待</p>
+            <div class="bg-muted p-4 rounded-lg text-left max-w-md">
+                <h3 class="font-medium text-primary mb-2">计划功能:</h3>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• 校园平面图 / 卫星图切换</li>
+                    <li>• 各植物采集点标注</li>
+                    <li>• 点击标注查看物种详情</li>
+                    <li>• 实习路线规划</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="aboutPage" class="h-full hidden flex-col p-4 overflow-y-auto">
+            <h2 class="text-xl font-bold text-primary mb-4">联系作者</h2>
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <h3 class="text-center text-gray-1000 mb-4">扫码关注公众号</h3>
+                <div class="flex justify-center mb-4">
+                    <img src="https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/35a99c88ce704a3d8af6b1d65a5ea8ea.jpg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026050722111501A7EF84A99807C91AEE&rrcfp=d52e923b&x-expires=1778767875&x-signature=9lNtq9KULb%2FtNUI3c24alVsTPGY%3D" 
+                         alt="公众号二维码" 
+                         class="w-48 h-48 rounded-lg object-contain">
+                </div>
+                <p class="text-center text-gray-1000 text-sm">如有信息错误，请于公众号给作者留言。<br>欢迎指正。</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="font-medium text-primary mb-3">关于本应用</h3>
+                <p class="text-gray-1000 text-sm leading-relaxed mb-4">
+                    本应用为植物学实习教学辅助工具，主要收录济南大学校园植物的辨识特征、应用价值和植物文化等学术参考信息。本应用所有内容均由个人整理编辑，仅作为教学实习辅助参考使用，不代表任何单位的官方立场，其内容观点、信息准确性均由个人负责。
+                </p>
+                <p class="text-gray-1000 text-sm leading-relaxed mb-4">
+                    所有物种信息及应用价值，尤其是药用价值仅为教学学术参考，不构成任何医疗建议、诊断、治疗或用药指导。任何疾病治疗、身体调理需求，均应前往正规医疗机构就诊，在专业医护人员指导下合理用药，切勿依据本文内容自行采集、使用植物入药，由此引发的一切健康风险及相关责任，均由使用者自行承担。
+                </p>
+                <p class="text-gray-1000 text-sm leading-relaxed">
+                    部分文字或图片来源于网络，或由AI生成，如有侵权，请于公众号联系作者删除。
+                </p>
+            </div>
+        </div>
+
+        <div id="detailPage" class="h-full hidden flex-col bg-white overflow-y-auto">
+            <div class="relative">
+                <button id="backBtn" class="absolute top-4 left-4 z-10 bg-white/80 rounded-full p-2 shadow-md">
+                    <i class="fa fa-arrow-left"></i>
+                </button>
+                <button id="favoriteBtn" class="absolute top-4 right-4 z-10 bg-white/80 rounded-full p-2 shadow-md">
+                    <i class="fa fa-heart-o"></i>
+                </button>
+                <div id="detailMainImage" class="h-64 bg-gray-100">
+                </div>
+            </div>
+            <div class="p-6">
+                <h1 id="detailName" class="text-2xl font-bold text-gray-800"></h1>
+                <p id="detailLatin" class="text-gray-500 italic mt-1"></p>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <span id="detailFamily" class="px-3 py-1 bg-muted text-primary rounded-full text-xs"></span>
+                    <span id="detailType" class="px-3 py-1 bg-muted text-primary rounded-full text-xs"></span>
+                </div>
+                <div class="mt-6 space-y-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-primary flex items-center">
+                            <i class="fa fa-tag mr-2"></i> 别名
+                        </h3>
+                        <p id="detailAlias" class="mt-2 font-SimSun text-black-1000"></p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-primary flex items-center">
+                            <i class="fa fa-info-circle mr-2"></i> 形态特征
+                        </h3>
+                        <div id="detailFeatures" class="mt-2 font-SimSun text-gray-700 space-y-2">
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-primary flex items-center">
+                            <i class="fa fa-leaf mr-2"></i> 应用价值
+                        </h3>
+                        <p id="detailUses" class="mt-2 font-SimSun text-gray-700"></p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-primary flex items-center">
+                            <i class="fa fa-book mr-2"></i> 植物文化
+                        </h3>
+                        <p id="detailCulture" class="mt-2 font-SimSun text-gray-700"></p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-primary flex items-center">
+                            <i class="fa fa-map-marker mr-2"></i> 生长习性
+                        </h3>
+                        <p id="detailhabits" class="mt-2 font-SimSun text-gray-700"></p>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-lg font-bold text-primary flex items-center mb-3">
+                            <i class="fa fa-picture-o mr-2"></i> 植物图集
+                        </h3>
+                        <div id="detailGallery" class="grid grid-cols-2 gap-2">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav id="bottomNav" class="bg-white border-t shadow-lg py-1 fixed bottom-0 left-0 right-0 z-50">
+    <div class="flex justify-around">
+        <button class="nav-btn flex flex-col items-center text-primary" data-page="browse">
+            <i class="fa fa-leaf text-lg"></i>
+            <span class="text-xs mt-1">浏览与检索</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center text-gray-500" data-page="favorites">
+            <i class="fa fa-bookmark text-lg"></i>
+            <span class="text-xs mt-1">收藏</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center text-gray-500" data-page="map">
+            <i class="fa fa-map text-lg"></i>
+            <span class="text-xs mt-1">地图</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center text-gray-500" data-page="about">
+            <i class="fa fa-comment text-lg"></i>
+            <span class="text-xs mt-1">联系作者</span>
+        </button>
+    </div>
+</nav>
+
+    <script>
+        const plants = [
+            {
+                id: 1,
+                name: "紫薇",
+                latin: "Lagerstroemia indica",
+                family: "千屈菜科",
+                genus: "紫薇属",
+                type: "灌木",
+                alias: "百日红、千日红、痒痒树、痒痒花、无皮树、西洋水杨梅、蚊子花、紫兰花、紫金花、满堂红",
+                features: {
+                    株: "植株高 3-7 米，树形多扭曲，树冠不规整，老干苍劲古朴，寿命可达 200 年以上。",
+                    茎: "树皮光滑洁净，呈灰色或灰褐色，薄片状剥落，内皮光洁，故得名 “无皮树”；小枝纤细，具 4 棱，略呈翅状，柔软易弯曲，轻挠树干会引起整树颤动，故称“痒痒树”。",
+                    叶: "叶互生或有时对生，纸质；椭圆形、阔矩圆形或倒卵形，长2.5-7厘米，宽1.5-4厘米；全缘，顶端短尖或钝形，基部阔楔形，叶面光滑，近无柄。",
+                    花: "玫红、大红、粉红、紫色或白色，直径3-4厘米，常组成7-20厘米的顶生圆锥花序；花瓣6枚，皱缩如绫罗，基部有长爪，雄蕊多数（36-42枚），外圈6枚较长；花期6-9月，长达百日，故有“百日红”之称。",
+                    果实: "蒴果椭圆状球形或阔椭圆形，长1-1.3厘米，幼时绿色至黄色，成熟时或干燥时呈紫黑色，室背开裂，种子扁平，有翅，长约8毫米，果期9-12月。"
+                },
+                uses: "观赏价值：树姿优美、花色艳丽、花期超长，广泛用于公园、庭院、行道树栽植，可孤植、丛植或列植；枝干柔韧易造型，老干苍劲，是制作盆景的优良素材；对二氧化硫、氯气等有害气体抗性强，适合工矿区绿化。药用价值：据《本草纲目》记载，树皮、叶、花、根均可入药，活血通经、止痛、消肿、解毒，可治咯血、痈肿疮毒、月经不调等。木材价值：木材坚硬、耐腐、纹理细腻，可制作农具、家具、建筑及雕刻用材。",
+                culture: "星象与皇权象征：名称源于“紫微星”（北极星），古代视为天帝居所，象征尊贵、权力与祥瑞；唐代开元元年，中书省改称“紫薇省”，中书令称“紫薇令”，紫薇成为官运亨通的象征，又称“官样花”。文学意象：“谁道花无红百日，紫薇长放半年花”（杨万里），赞其花期持久；“独坐黄昏谁是伴，紫薇花对紫微郎”（白居易），借花抒怀，显仕途心境；寓意坚韧、高洁、富贵、长寿，象征事业兴旺、福泽绵长。",
+                habits: "紫薇为强阳性喜光树种，喜温暖湿润、光照充足的环境，耐高温、不耐阴，有一定耐寒能力；对土壤适应性广，耐贫瘠、稍耐轻度盐碱，适宜疏松肥沃、排水通畅的中性至微酸性土壤，极忌低洼积水，耐旱怕涝，萌蘖性强、耐修剪，同时抗烟尘与有害气体，城市绿化适应性极佳。",
+                images: [
+                    "https://raw.githubusercontent.com/lhzhang-ujn/Campus-plants-of-UJN/main/images/ziwei2.jpg",
+                    "https://raw.githubusercontent.com/lhzhang-ujn/Campus-plants-of-UJN/main/images/ziwei2.jpg",
+                    "https://raw.githubusercontent.com/lhzhang-ujn/Campus-plants-of-UJN/main/images/ziwei2.jpg",
+                    "https://raw.githubusercontent.com/lhzhang-ujn/Campus-plants-of-UJN/main/images/ziwei2.jpg",
+                    "https://raw.githubusercontent.com/lhzhang-ujn/Campus-plants-of-UJN/main/images/ziwei2.jpg",
+                    "https://raw.githubusercontent.com/lhzhang-ujn/Campus-plants-of-UJN/main/images/ziwei2.jpg"
+                ]
+            },
+            {
+                id: 2,
+                name: "雪松",
+                latin: "Cedrus deodara",
+                family: "松科",
+                genus: "雪松属",
+                type: "乔木",
+                alias: "雪松、香柏、宝塔松、番柏、喜马拉雅雪松",
+                features: {
+                    株: "常绿大乔木，树形呈尖塔形、宝塔形，主干通直挺拔，成年树高可达 30–50 米，树冠层次分明、规整端庄，整体姿态雄伟肃穆，寿命长，常作景观骨干树种。",
+                    茎: "树干粗壮直立，树皮深灰色，老树皮呈鳞片状开裂、不规则剥落；大枝平展、小枝微下垂，枝条轮生分布，层次错落，形成典型塔状冠形；木质坚硬致密，纹理通直。",
+                    叶: "叶片为针形叶，坚硬尖锐，簇生于短枝顶端、散生于长枝上；叶色常年浓绿或银灰绿色，长 2.5–5 厘米，三棱形，表面有气孔线；四季常青，冬季不落叶，观赏性极强。",
+                    花: "雌雄异株，稀同株；雄球花椭圆状卵形，淡黄色，簇生枝顶；雌球花初为紫红色，直立生于短枝顶端。花期多在秋季，花型小巧，不似阔叶树艳丽，以观树形、观叶为主。",
+                    果实: "球果呈卵状椭圆形，成熟前为绿色，成熟后转为褐色；长 7–12 厘米，种鳞木质、扇状，成熟后自行开裂；种子带翅，可随风传播，果期次年秋季。"
+                },
+                uses: "园林观赏价值：树姿雄伟、四季常绿、树形规整，是庭院、广场、校园、陵园、行道优选树种；可孤植、列植、丛植，也常用于纪念性园林、机关单位绿化，象征庄重肃穆。生态绿化价值：抗逆性强，耐寒冷、耐干旱，对烟尘、部分有害气体有一定抗性，防风固土、净化空气效果好，适合北方及温带地区荒山绿化、水土保持。木材与经济价值：木材纹理直、质地轻软、不易变形、有香气，耐腐防虫，可用于建筑、家具、雕刻、造船及工艺用材。药用价值：枝叶、树脂可入药，有祛风活络、消肿止痛、安神等功效。",
+                culture: "象征寓意：雪松四季常青、挺拔不屈、傲雪迎风，象征坚韧不拔、高洁正直、长青不朽、庄重肃穆。精神寄托：常种植于校园、陵园、纪念园区，代表崇高、敬仰、不朽与永恒，寓意学子坚韧成才、逝者精神长存。人文意象：自古被视为君子之树，不畏严寒、傲然挺立，代表沉稳大气、坚守本心，是中式现代园林中正气、稳重的代表性树种。礼仪象征：常用于重要场馆、政府园区绿化，象征基业长青、事业稳固、风骨凛然。",
+                habits: "雪松属温带常绿乔木，喜光、稍耐庇荫，喜凉爽湿润气候，耐寒性强但不耐酷暑闷热；适宜土层深厚、疏松透气、排水良好的微酸性至中性土壤，忌黏重板结与低洼积水，不耐盐碱，深根性、抗风能力强，耐旱喜湿润空气，生长偏慢、寿命长，不耐严重烟尘污染，适宜开阔校园及山地环境栽植。",
+                images: []
+            },
+            {
+                id: 3,
+                name: "楝",
+                latin: "Melia azedarach",
+                family: "楝科",
+                genus: "楝属",
+                type: "乔木",
+                alias: "苦楝、紫花树、森树",
+                features: {
+                    株: "落叶乔木，高可达10余米，树皮灰褐色，纵裂。",
+                    茎: "分枝广展，小枝有叶痕。",
+                    叶: "叶为2-3回奇数羽状复叶，小叶对生，卵形、椭圆形至披针形。",
+                    花: "圆锥花序约与叶等长，花芳香，花瓣淡紫色，倒卵状匙形。",
+                    果实: "核果球形至椭圆形，内果皮木质，4-5室，每室有种子1颗。"
+                },
+                uses: "根、叶、花、果均可入药，有清热、燥湿、杀虫等功效；木材可制家具、农具等；也是优良的蜜源植物。",
+                culture: "楝树在古代常被用来驱邪，端午节有挂楝叶、插菖蒲的习俗。",
+                habits: "济南大学校园多有分布，常见于老校区围墙边、操场周边及家属院绿地。",
+                images: []
+            },
+            {
+                id: 4,
+                name: "鹅掌楸",
+                latin: "Liriodendron chinense",
+                family: "木兰科",
+                genus: "鹅掌楸属",
+                type: "乔木",
+                alias: "马褂木、双飘树",
+                features: {
+                    株: "落叶大乔木，高达40米，胸径1米以上，树冠圆锥形。",
+                    茎: "树皮灰色或黑褐色，纵裂；小枝灰褐色或紫褐色，无毛。",
+                    叶: "叶形似马褂，长4-18厘米，宽5-19厘米，近基部每边具1侧裂片，先端具2浅裂。",
+                    花: "花杯状，花被片9，外轮3片绿色，萼片状，向外弯垂，内两轮6片、直立，花瓣状、倒卵形，绿色，具黄色纵条纹。",
+                    果实: "聚合果纺锤形，由多数具翅的小坚果组成。"
+                },
+                uses: "中国特有的珍稀树种，树姿雄伟，叶形奇特，是优良的行道树和庭荫树；木材可供建筑、家具等用材；树皮、根皮可入药。",
+                culture: "鹅掌楸是古老的孑遗植物，被誉为“植物界的活化石”，也是国家二级保护植物。",
+                habits: "济南大学西校区图书馆前绿地、逸夫楼附近有种植。",
+                images: []
+            },
+            {
+                id: 5,
+                name: "毛梾",
+                latin: "Swida walteri",
+                family: "山茱萸科",
+                genus: "梾木属",
+                type: "乔木",
+                alias: "车梁木、油树、凉子木",
+                features: {
+                    株: "落叶乔木，高6-15米，树皮厚，黑褐色，纵裂而又横裂成块状。",
+                    茎: "幼枝对生，绿色，略有四棱，被灰白色贴生短柔毛，老时灰绿色，无毛。",
+                    叶: "叶对生，纸质，椭圆形、长椭圆形或卵形，长4-12厘米，宽1.7-5.3厘米。",
+                    花: "伞房状聚伞花序顶生，花密，宽7-9厘米，被灰白色短柔毛；花白色，有香味，直径9.5毫米。",
+                    果实: "核果球形，直径6-8毫米，成熟时黑色；核骨质，扁球形，直径4毫米，高3毫米。"
+                },
+                uses: "木材坚硬，纹理细致，可供建筑、家具、雕刻等用；种子含油量高，可榨油供食用或工业用；树皮和叶可提取栲胶。",
+                culture: "毛梾是优良的油料树种，也是重要的用材树种，有“油树”之称。",
+                habits: "济南大学西校区后山、东校区部分绿地有分布。",
+                images: []
+            },
+            {
+                id: 6,
+                name: "榉树",
+                latin: "Zelkova schneideriana",
+                family: "榆科",
+                genus: "榉属",
+                type: "乔木",
+                alias: "光叶榉、鸡油树、血榉",
+                features: {
+                    株: "落叶乔木，高达30米，胸径达1米；树皮灰白色或褐灰色，呈不规则的片状剥落。",
+                    茎: "当年生枝紫褐色或棕褐色，疏被短柔毛，后渐脱落。",
+                    叶: "叶厚纸质，大小形状变异很大，卵形、椭圆形或卵状披针形，长2-10厘米，宽1.5-4厘米。",
+                    花: "雄花簇生于新枝下部的叶腋或苞腋，雌花1-3朵生于新枝上部的叶腋。",
+                    果实: "核果与榉树相似，直径约4毫米，无梗，淡绿色，被细毛。"
+                },
+                uses: "木材坚硬，耐水湿，可供船舰、桥梁、建筑、家具等用材；树皮和树叶可入药；也是优良的行道树和庭荫树。",
+                culture: "榉树谐音“举”，有“应试中举”的吉祥寓意，常被种植于庭院中。",
+                habits: "济南大学西校区主干道旁、行政楼前有种植。",
+                images: []
+            },
+            {
+    id: 7,
+    name: "杜仲",
+    latin: "Eucommia ulmoides",
+    family: "杜仲科",
+    genus: "杜仲属",
+    type: "乔木",
+    alias: "胶木、丝棉树、思仙",
+    features: {
+        株: "落叶乔木，高达20米，胸径约50厘米，树皮灰褐色，粗糙，内含橡胶，折断拉开有多数细丝。",
+        茎: "嫩枝有黄褐色毛，不久变秃净，老枝有明显皮孔。",
+        叶: "叶椭圆形、卵形或矩圆形，薄革质，长6-15厘米，宽3.5-6.5厘米，边缘有锯齿。",
+        花: "花生于当年枝基部，雄花无花被，雌花单生。",
+        果实: "翅果扁平，长椭圆形，顶端2裂，种子扁平，线形。"
+    },
+    uses: "树皮为名贵中药材，能补肝肾、强筋骨、安胎；树干通直，枝叶茂密，是优良绿化树种；全株含硬橡胶，可制作硬质橡胶制品。",
+    culture: "中国特有珍稀濒危二级保护植物，第四纪冰川孑遗树种，被誉为“中国神树”。",
+    habits: "济南大学西校区教学楼附近、植物园区域有种植。",
+    images: []
+},
+{
+    id: 8,
+    name: "朴",
+    latin: "Celtis sinensis",
+    family: "大麻科",
+    genus: "朴属",
+    type: "乔木",
+    alias: "黄果朴、白麻子、朴榆",
+    features: {
+        株: "落叶乔木，高达20米，树皮灰色，光滑，老时粗糙但不裂。",
+        茎: "小枝密被柔毛，老枝疏生毛。",
+        叶: "叶多为卵形或卵状椭圆形，长3-10厘米，宽1.5-4厘米，边缘近全缘或上部有浅锯齿。",
+        花: "花杂性，同株，1-3朵生于当年枝的叶腋。",
+        果实: "核果单生或2个并生，近球形，熟时红褐色，果核有穴和突肋。"
+    },
+    uses: "木材坚硬，可供家具、建筑、造船等用；根皮、树皮、嫩叶可入药；抗烟尘、耐贫瘠，是优秀行道树和防护林树种。",
+    culture: "朴树树形优美，寿命长，在传统文化中象征朴实、坚韧，是传统庭院常用树种。",
+    habits: "济南大学校园多处分布，常见于操场周边、老校区绿地。",
+    images: []
+},
+{
+    id: 9,
+    name: "青檀",
+    latin: "Pteroceltis tatarinowii",
+    family: "大麻科",
+    genus: "青檀属",
+    type: "乔木",
+    alias: "檀树、翼朴、摇钱树",
+    features: {
+        株: "落叶乔木，高达20米以上，树皮淡灰色，老时纵裂，呈长片状剥落。",
+        茎: "小枝黄绿色，干时变栗褐色，略被短柔毛。",
+        叶: "叶纸质，宽卵形至长卵形，长3-10厘米，宽2-5厘米，边缘有不规则锯齿。",
+        花: "花单性，雌雄同株，雄花簇生，雌花单生于叶腋。",
+        果实: "翅果状坚果近圆形或近四方形，黄绿色或黄褐色，翅宽，带有皱纹。"
+    },
+    uses: "树皮是制作宣纸的优质原料；木材坚硬细密，可作家具、农具；根系发达，固土能力强，是优良护坡树种。",
+    culture: "中国特有单种属植物，国家二级保护稀有树种，与宣纸文化渊源深厚。",
+    habits: "济南大学西校区后山、植物园、水系周边有种植。",
+    images: []
+},
+{
+    id: 10,
+    name: "金叶梣叶槭",
+    latin: "Acer negundo 'Aurea'",
+    family: "槭树科",
+    genus: "槭属",
+    type: "乔木",
+    alias: "金叶复叶槭、金叶梣叶枫",
+    features: {
+        株: "落叶乔木，高可达18米，树冠圆球形，树皮黄褐色或灰褐色。",
+        茎: "小枝绿色，被白粉，多年生枝灰褐色。",
+        叶: "奇数羽状复叶对生，小叶3-5枚，春季呈金黄色，夏季渐变为黄绿色，秋季又恢复金黄色。",
+        花: "花单性，雌雄异株，先叶开放，雄花为聚伞花序，雌花为总状花序。",
+        果实: "翅果淡黄褐色，长约3厘米，两翅向内稍弯曲。"
+    },
+    uses: "著名彩叶观赏树种，叶色金黄亮丽，观赏价值极高，常用于庭院、公园、道路绿化；生长迅速，适应性强。",
+    culture: "欧美及国内热门园林彩叶树种，象征阳光、活力与希望。",
+    habits: "济南大学新校区主干道、景观绿化带、教学楼前均有种植。",
+    images: []
+},
+{
+    id: 11,
+    name: "石楠",
+    latin: "Photinia serrulata",
+    family: "蔷薇科",
+    genus: "石楠属",
+    type: "灌木",
+    alias: "千年红、扇骨木、笔树",
+    features: {
+        株: "常绿灌木或小乔木，高4-6米，有时可达12米，枝褐灰色，无毛。",
+        茎: "冬芽卵形，鳞片褐色，无毛。",
+        叶: "叶革质，长椭圆形、长倒卵形或倒卵状椭圆形，长9-22厘米，宽3-6.5厘米，边缘有疏生细锯齿。",
+        花: "复伞房花序顶生，花密生，直径6-8毫米，花瓣白色，近圆形。",
+        果实: "梨果球形，直径5-6毫米，红色，后成褐紫色。"
+    },
+    uses: "常见观赏绿化树种，春季新叶红艳，夏季白花满树，秋冬红果累累；木材可制车轮、器具；叶、根可入药。",
+    culture: "石楠在传统文化中象征庄重、威严，古代常用于庭院、官署绿化。",
+    habits: "济南大学校园广泛种植，常见于绿化带、花坛、楼前绿篱。",
+    images: []
+},
+{
+    id: 12,
+    name: "冬青卫矛",
+    latin: "Euonymus japonicus",
+    family: "卫矛科",
+    genus: "卫矛属",
+    type: "灌木",
+    alias: "大叶黄杨、正木、日本卫矛",
+    features: {
+        株: "常绿灌木或小乔木，高可达8米，小枝绿色，稍四棱形。",
+        茎: "枝叶茂密，四季常青。",
+        叶: "叶革质，有光泽，倒卵形或椭圆形，长3-5厘米，宽2-3厘米，边缘有细钝齿。",
+        花: "聚伞花序腋生，花白绿色，直径5-7毫米，花瓣近卵圆形。",
+        果实: "蒴果近球形，淡粉红色，假种皮橘红色。"
+    },
+    uses: "最常见绿篱树种，耐修剪，四季常青，广泛用于道路、校园、庭院绿篱及造型；全株可入药。",
+    culture: "因四季常青、生命力顽强，象征坚韧、永恒与生机。",
+    habits: "济南大学校园随处可见，主要用作绿篱、花坛镶边、造型灌木。",
+    images: []
+},
+{
+    id: 13,
+    name: "黑松",
+    latin: "Pinus thunbergii",
+    family: "松科",
+    genus: "松属",
+    type: "乔木",
+    alias: "白芽松、日本黑松",
+    features: {
+        株: "常绿乔木，高可达30米，树皮灰黑色，裂成块片脱落。",
+        茎: "枝轮生，一年生枝淡褐黄色，无毛。",
+        叶: "针叶2针一束，深绿色，有光泽，粗硬，长6-12厘米，边缘有细锯齿。",
+        花: "雌球花单生或2-3个聚生于新枝近顶端，淡紫红色。",
+        果实: "球果圆锥状卵圆形或卵圆形，成熟前绿色，熟时褐色。"
+    },
+    uses: "著名观赏树种，树姿苍劲古朴，常用于盆景、庭院、海滨绿化；抗风、耐盐碱、耐贫瘠；木材可供建筑、家具用。",
+    culture: "松科代表树种，象征坚韧不拔、万古长青，是传统吉祥树种。",
+    habits: "济南大学校园广场、景观区、校门附近有种植。",
+    images: []
+},
+{
+    id: 14,
+    name: "白皮松",
+    latin: "Pinus bungeana",
+    family: "松科",
+    genus: "松属",
+    type: "乔木",
+    alias: "白骨松、三针松、蟠龙松",
+    features: {
+        株: "常绿乔木，高达30米，胸径可达3米，树皮光滑，灰绿色或灰白色，成不规则薄片脱落。",
+        茎: "一年生枝灰绿色，无毛。",
+        叶: "针叶3针一束，粗硬，长5-10厘米，叶鞘早落。",
+        花: "雌球花紫红色，生于新枝顶端。",
+        果实: "球果通常单生，成熟前淡绿色，熟时淡黄褐色。"
+    },
+    uses: "中国特有名贵观赏树种，树皮奇特洁白，树姿优美，为传统宫廷园林树种；木材可供建筑、家具、文具用。",
+    culture: "自古为皇家园林树种，象征高洁、长寿、祥瑞，被誉为“松中贵族”。",
+    habits: "济南大学图书馆前、行政楼前、中心广场等重要景观区有种植。",
+    images: []
+},
+{
+    id: 15,
+    name: "云杉",
+    latin: "Picea asperata",
+    family: "松科",
+    genus: "云杉属",
+    type: "乔木",
+    alias: "粗枝云杉、大果云杉、白松",
+    features: {
+        株: "常绿乔木，高达45米，胸径达1米，树皮淡灰褐色或淡褐灰色，裂成不规则鳞片或稍厚的块片脱落。",
+        茎: "一年生枝淡褐黄色、淡黄褐色或淡红褐色，无毛或有疏毛。",
+        叶: "叶四棱状条形，横断面四棱形，长1-2厘米，先端微尖或急尖。",
+        花: "雌雄同株，雄球花黄色，雌球花紫色或红紫色。",
+        果实: "球果圆柱状矩圆形或圆柱形，成熟前绿色，熟时淡褐色或栗褐色。"
+    },
+    uses: "重要用材树种，木材优良，供建筑、飞机、乐器、造纸等用；树形端正，为著名庭院观赏及圣诞树常用树种。",
+    culture: "古老裸子植物，象征挺拔、坚毅、永恒，是高海拔地区代表树种。",
+    habits: "济南大学校园景观区、植物园、纪念林有种植。",
+    images: []
+},
+{
+    id: 16,
+    name: "侧柏",
+    latin: "Platycladus orientalis",
+    family: "柏科",
+    genus: "侧柏属",
+    type: "乔木",
+    alias: "扁柏、香柏、黄柏",
+    features: {
+        株: "常绿乔木，高达20余米，胸径1米，树皮薄，浅灰褐色，纵裂成条片。",
+        茎: "枝条向上伸展或斜展，幼树树冠卵状尖塔形，老树树冠广圆形。",
+        叶: "叶鳞形，长1-3毫米，先端微钝，中央叶露出部分呈倒卵状菱形或斜方形。",
+        花: "雌雄同株，花单性，雄球花黄色，卵圆形。",
+        果实: "球果近卵圆形，成熟前近肉质，蓝绿色，被白粉，成熟后木质，红褐色。"
+    },
+    uses: "传统绿化及造林先锋树种，寿命极长，耐干旱贫瘠；木材耐腐，供建筑、家具、文具用；枝叶、种子可入药。",
+    culture: "中国特有树种，象征长寿、不朽，常用于陵园、寺庙、庭院绿化。",
+    habits: "济南大学校园广泛分布，常见于纪念林区、校园绿地、山坡。",
+    images: []
+},
+{
+    id: 17,
+    name: "白蜡树",
+    latin: "Fraxinus chinensis",
+    family: "木犀科",
+    genus: "梣属",
+    type: "乔木",
+    alias: "梣、青榔木、白荆树",
+    features: {
+        株: "落叶乔木，高达12米，树皮灰褐色，纵裂。",
+        茎: "小枝黄褐色，粗糙，无毛或疏被长柔毛，皮孔小，不明显。",
+        叶: "羽状复叶长15-25厘米，小叶5-7枚，硬纸质，卵形、倒卵状长圆形至披针形。",
+        花: "圆锥花序顶生或腋生，花雌雄异株，雄花密集，雌花疏离。",
+        果实: "翅果匙形，上中部最宽，先端锐尖，常呈犁头状。"
+    },
+    uses: "优良用材树种，木材坚韧，可供家具、农具、运动器械用；枝叶可放养白蜡虫产白蜡；树形优美，为优良行道树。",
+    culture: "传统经济与绿化兼用树种，历史悠久，象征坚韧、实用、朴实。",
+    habits: "济南大学校园道路两侧、水系周边、操场周边均有大量种植。",
+    images: []
+},
+{
+    id: 18,
+    name: "七叶树",
+    latin: "Aesculus chinensis",
+    family: "七叶树科",
+    genus: "七叶树属",
+    type: "乔木",
+    alias: "梭椤树、天师栗、猴板栗",
+    features: {
+        株: "落叶乔木，高达25米，树皮深褐色或灰褐色，小枝圆柱形，黄褐色或灰褐色。",
+        茎: "冬芽大，具树脂，圆柱形或卵圆形。",
+        叶: "掌状复叶对生，小叶5-7片，纸质，长圆披针形至长圆倒披针形，边缘有钝尖形细锯齿。",
+        花: "花序圆筒形，花杂性，白色，花瓣4枚，长圆倒卵形至长圆披针形。",
+        果实: "蒴果球形或倒卵圆形，黄褐色，无刺，具很密的斑点。"
+    },
+    uses: "世界著名观赏树种，树形壮观，花序硕大洁白，被誉为“佛教圣树”；种子可入药，名为“娑罗子”；木材可制器具。",
+    culture: "与佛教渊源深厚，相传为佛祖悟道时所坐之树，象征神圣、吉祥、平安。",
+    habits: "济南大学西校区主教学楼前、图书馆周边、校园核心景观区有种植。",
+    images: []
+},
+{
+    id: 19,
+    name: "梓树",
+    latin: "Catalpa ovata",
+    family: "紫葳科",
+    genus: "梓属",
+    type: "乔木",
+    alias: "河楸、水桐、黄花楸",
+    features: {
+        株: "落叶乔木，高达15米，树冠伞形，主干通直平滑，暗灰色或灰褐色。",
+        茎: "嫩枝稀疏有柔毛，小枝黄褐色，无毛。",
+        叶: "叶对生或近于对生，有时轮生，阔卵形，长宽近相等，顶端渐尖，基部心形，全缘或浅波状。",
+        花: "圆锥花序顶生，花萼蕾时圆球形，花冠钟状，淡黄色，内有黄色条纹及紫色斑纹。",
+        果实: "蒴果线形，下垂，长20-30厘米，宽5-7毫米。"
+    },
+    uses: "树冠优美，花大色艳，是优良行道树和庭荫树；木材白色，轻软，可供家具、乐器用；果实、树皮可入药。",
+    culture: "古代桑、梓、榆、柳为四大名木，“桑梓”代指故乡，象征思念与故土。",
+    habits: "济南大学校园绿地、水系周边、教学楼附近有种植。",
+    images: []
+},
+{
+    id: 20,
+    name: "梧桐",
+    latin: "Firmiana simplex",
+    family: "锦葵科",
+    genus: "梧桐属",
+    type: "乔木",
+    alias: "青桐、桐麻、中国梧桐",
+    features: {
+        株: "落叶乔木，高达15-20米，树干挺直，树皮绿色，平滑。",
+        茎: "小枝粗壮，绿色，芽鳞被锈色柔毛。",
+        叶: "叶大，阔卵形，掌状3-5裂，裂片全缘，基部心形。",
+        花: "圆锥花序顶生，花淡黄绿色，花单性，无花瓣。",
+        果实: "蓇葖果膜质，有柄，成熟前开裂成叶状，种子圆球形，表面有皱纹。"
+    },
+    uses: "著名观赏树种，树干青翠，叶大优美，为传统庭院名树；木材轻软，可制乐器、家具；种子可炒食。",
+    culture: "传说凤凰非梧桐不栖，象征高洁、祥瑞、高贵。",
+    habits: "济南大学老校区、图书馆周边、校园景观区有种植。",
+    images: []
+},
+{
+    id: 21,
+    name: "蜡梅",
+    latin: "Chimonanthus praecox",
+    family: "蜡梅科",
+    genus: "蜡梅属",
+    type: "灌木",
+    alias: "腊梅、黄梅花、香梅",
+    features: {
+        株: "落叶灌木，高达4米，幼枝四方形，老枝近圆柱形，灰褐色。",
+        茎: "芽鳞片近圆形，覆瓦状排列，外面被短柔毛。",
+        叶: "叶纸质至近革质，卵圆形、椭圆形、宽椭圆形至卵状披针形，全缘。",
+        花: "花着生于第二年生枝条叶腋内，先花后叶，芳香，花被片圆形、长圆形、倒卵形、椭圆形或匙形，黄色。",
+        果实: "果托近木质化，坛状或倒卵状椭圆形，口部收缩，具有钻状披针形的被毛附生物。"
+    },
+    uses: "冬季著名观赏花木，花期长，香气浓郁；根、叶可入药；花可提取芳香油。",
+    culture: "傲霜斗雪，象征坚韧、高洁、不屈，是冬季代表花卉。",
+    habits: "济南大学校园花坛、庭院、景观绿地、教学楼周边有种植。",
+    images: []
+},
+{
+    id: 22,
+    name: "金叶女贞",
+    latin: "Ligustrum × vicaryi",
+    family: "木犀科",
+    genus: "女贞属",
+    type: "灌木",
+    alias: "黄叶女贞、金叶冬青",
+    features: {
+        株: "半常绿灌木，高2-3米，枝条开展，小枝圆柱形，幼时被短柔毛。",
+        茎: "老枝灰白色，幼枝淡黄色。",
+        叶: "单叶对生，叶片革质，椭圆形或卵状椭圆形，嫩叶金黄色，老叶黄绿色至绿色。",
+        花: "圆锥花序顶生，花白色，小花密集，芳香。",
+        果实: "核果椭圆形，紫黑色。"
+    },
+    uses: "著名彩叶绿篱树种，叶色金黄亮丽，耐修剪，广泛用于模纹花坛、绿篱、造型。",
+    culture: "色彩明亮，象征阳光、活力、希望。",
+    habits: "济南大学校园随处可见，主要用于花坛镶边、模纹图案、绿篱。",
+    images: []
+},
+{
+    id: 23,
+    name: "南天竹",
+    latin: "Nandina domestica",
+    family: "小檗科",
+    genus: "南天竹属",
+    type: "灌木",
+    alias: "南天竺、红杷子、天烛子",
+    features: {
+        株: "常绿小灌木，高1-3米，茎常丛生而少分枝，光滑无毛，幼枝红色，老后灰色。",
+        茎: "直立，少分枝，老茎浅褐色，幼枝红色。",
+        叶: "叶互生，集生于茎的上部，三回羽状复叶，小叶薄革质，椭圆形或椭圆状披针形，全缘，秋冬叶色变红。",
+        花: "圆锥花序顶生，花小，白色，具芳香。",
+        果实: "浆果球形，直径5-8毫米，熟时鲜红色，偶有黄色。"
+    },
+    uses: "优良观赏树种，叶色秀丽，红果累累，经久不落，是庭院、盆景佳品；全株有毒，可药用。",
+    culture: "象征吉祥、长寿、红火，传统年宵观赏植物。",
+    habits: "济南大学校园花坛、庭院、教学楼前、景观绿地有种植。",
+    images: []
+},
+{
+    id: 24,
+    name: "杏",
+    latin: "Prunus armeniaca",
+    family: "蔷薇科",
+    genus: "李属",
+    type: "乔木",
+    alias: "杏树、杏花、杏子",
+    features: {
+        株: "落叶乔木，高5-8米，树冠圆形、扁圆形或长圆形，树皮灰褐色，纵裂。",
+        茎: "多年生枝浅褐色，皮孔大而横生，一年生枝浅红褐色，有光泽，无毛。",
+        叶: "叶宽卵形或圆卵形，先端急尖至短渐尖，基部圆形至近心形，叶边有圆钝锯齿。",
+        花: "花单生，先叶开放，花瓣圆形至倒卵形，白色或带红色。",
+        果实: "果实球形，稀倒卵形，白色、黄色至黄红色，果肉多汁，核卵形或椭圆形，两侧扁平。"
+    },
+    uses: "著名果树，果实可鲜食、加工；早春开花，美丽芳香，是优良观赏树；种仁杏仁可食用、药用。",
+    culture: "杏花象征春天、娇艳、幸福，是传统十大名花之一。",
+    habits: "济南大学校园果园、景观区、教学楼附近有种植。",
+    images: []
+},
+{
+    id: 25,
+    name: "桃",
+    latin: "Prunus persica",
+    family: "蔷薇科",
+    genus: "李属",
+    type: "乔木",
+    alias: "桃树、桃花、桃子",
+    features: {
+        株: "落叶乔木，高3-8米，树冠宽广而平展，树皮暗红褐色，老时粗糙呈鳞片状。",
+        茎: "小枝细长，无毛，有光泽，绿色，向阳处转变成红色。",
+        叶: "叶卵状披针形或圆状披针形，先端渐尖，基部宽楔形，边缘具细锯齿或粗锯齿。",
+        花: "花单生，先叶开放，花瓣长圆状椭圆形至宽倒卵形，粉红色，罕为白色。",
+        果实: "果实卵形、宽椭圆形或扁圆形，色泽变化由淡绿白色至橙黄色，果肉多汁有香味。"
+    },
+    uses: "著名果树与观赏树，桃花艳丽，果实鲜美；桃仁可药用；是春季重要观赏花木。",
+    culture: "桃花象征爱情、春天、美好，“桃花运”寓意吉祥。",
+    habits: "济南大学校园景观区、花坛、庭院、果园区域有种植。",
+    images: []
+},
+{
+    id: 26,
+    name: "女贞",
+    latin: "Ligustrum lucidum",
+    family: "木犀科",
+    genus: "女贞属",
+    type: "乔木",
+    alias: "冬青、蜡树、女桢",
+    features: {
+        株: "常绿乔木，高达15米，树皮灰褐色，光滑不裂，枝开展、无毛。",
+        茎: "小枝淡黄褐色，圆柱形，疏生圆形或长圆形皮孔。",
+        叶: "叶常绿，革质，卵形、长卵形或椭圆形至宽椭圆形，全缘，叶面光亮。",
+        花: "圆锥花序顶生，花白色，芳香，近无梗。",
+        果实: "核果长圆形，蓝黑色，微弯曲，成熟时深蓝色。"
+    },
+    uses: "优良常绿行道树、绿篱树种，耐修剪，四季常青；果实为中药“女贞子”，可补肝肾、强腰膝。",
+    culture: "象征坚贞、忠诚、永恒，因冬不落叶得名。",
+    habits: "济南大学校园道路两侧、绿篱、庭院、教学楼周边广泛种植。",
+    images: []
+},
+{
+    id: 27,
+    name: "玫瑰",
+    latin: "Rosa rugosa",
+    family: "蔷薇科",
+    genus: "蔷薇属",
+    type: "灌木",
+    alias: "徘徊花、刺客、穿心玫瑰",
+    features: {
+        株: "落叶灌木，高可达2米，茎粗壮，丛生，小枝密被绒毛，并有针刺和腺毛。",
+        茎: "直立，多刺，皮刺外弯，淡黄色。",
+        叶: "小叶5-9片，椭圆形或椭圆状倒卵形，边缘有尖锐锯齿，叶面有光泽，有褶皱。",
+        花: "花单生于叶腋或数朵簇生，花瓣倒卵形，重瓣至半重瓣，芳香，紫红色至白色。",
+        果实: "果扁球形，砖红色，肉质，平滑，萼片宿存。"
+    },
+    uses: "世界著名观赏花卉与经济作物，可提取玫瑰精油、制作花茶、食品；花可药用，理气解郁。",
+    culture: "爱情、浪漫、美丽的象征，世界通用爱情之花。",
+    habits: "济南大学校园花坛、庭院、玫瑰园、景观区有种植。",
+    images: []
+},
+{
+    id: 28,
+    name: "丁香",
+    latin: "Syringa oblata",
+    family: "木犀科",
+    genus: "丁香属",
+    type: "灌木",
+    alias: "紫丁香、百结、情客",
+    features: {
+        株: "落叶灌木或小乔木，高可达5米，树皮灰褐色或灰色，小枝较粗。",
+        茎: "小枝、花序轴、花梗、苞片、花萼、幼叶两面以及叶柄均无毛而密被腺毛。",
+        叶: "叶革质或厚纸质，卵圆形至肾形，宽常大于长，全缘。",
+        花: "圆锥花序直立，由侧芽抽生，近球形或长圆形，花紫色或淡紫色，芳香。",
+        果实: "蒴果倒卵状椭圆形、卵形至长椭圆形，顶端渐尖。"
+    },
+    uses: "著名观赏花木，花序硕大，开花繁茂，香气浓郁；可提取芳香油；嫩叶可代茶。",
+    culture: "象征纯洁、初恋、思念，花语为“忧愁但美丽”。",
+    habits: "济南大学校园庭院、花坛、景观绿地、教学楼附近有种植。",
+    images: []
+},
+{
+    id: 29,
+    name: "木瓜海棠",
+    latin: "Chaenomeles cathayensis",
+    family: "蔷薇科",
+    genus: "木瓜属",
+    type: "灌木",
+    alias: "毛叶木瓜、木桃",
+    features: {
+        株: "落叶灌木至小乔木，高2-6米，枝条直立，具短枝刺，小枝圆柱形，微屈曲，无毛。",
+        茎: "冬芽三角卵形，先端急尖，无毛，紫褐色。",
+        叶: "叶片椭圆形、披针形至倒卵状披针形，边缘有芒状细尖锯齿。",
+        花: "花先叶开放，2-3朵簇生于二年生枝上，花瓣倒卵形或近圆形，淡红色或白色。",
+        果实: "果实卵球形或近圆柱形，先端有突起，黄色有红晕，味芳香。"
+    },
+    uses: "著名观赏花木，春季花色艳丽，秋季果实金黄芳香；果实可药用、制作蜜饯。",
+    culture: "象征吉祥、长寿、多子多福。",
+    habits: "济南大学校园花坛、庭院、景观区、教学楼前有种植。",
+    images: []
+},
+{
+    id: 30,
+    name: "贴梗海棠",
+    latin: "Chaenomeles speciosa",
+    family: "蔷薇科",
+    genus: "木瓜属",
+    type: "灌木",
+    alias: "皱皮木瓜、铁脚海棠、宣木瓜",
+    features: {
+        株: "落叶灌木，高达2米，枝条直立开展，有刺，小枝圆柱形，微屈曲，无毛。",
+        茎: "冬芽三角卵形，先端急尖，紫褐色。",
+        叶: "叶片卵形至椭圆形，稀长椭圆形，边缘有尖锐锯齿，叶面光亮。",
+        花: "花先叶开放，3-5朵簇生于二年生老枝上，花梗短粗，花瓣倒卵形或近圆形，猩红色、朱红色、粉红色或白色。",
+        果实: "果实球形或卵球形，黄色或带黄绿色，有稀疏不显明斑点，味芳香。"
+    },
+    uses: "著名观赏花木，花贴枝而生，花色艳丽；果实为中药“木瓜”，可舒筋活络、和胃化湿。",
+    culture: "象征热情、繁荣、吉祥。",
+    habits: "济南大学校园花坛、庭院、绿篱、景观区广泛种植。",
+    images: []
+},
+{
+    id: 31,
+    name: "北美海棠",
+    latin: "Malus 'American'",
+    family: "蔷薇科",
+    genus: "苹果属",
+    type: "乔木",
+    alias: "美国海棠、观赏海棠",
+    features: {
+        株: "落叶小乔木，高5-7米，树冠圆整，树干直立，树皮光滑。",
+        茎: "小枝紫红色，老枝红褐色。",
+        叶: "叶色丰富，从绿色、紫红色、红色到金黄色，色彩多变，季相景观明显。",
+        花: "花繁叶茂，花量大，花色艳丽，有白色、粉色、红色、紫色等。",
+        果实: "果实小，玲珑可爱，颜色鲜艳，经冬不落，宿存至冬季。"
+    },
+    uses: "世界著名观赏海棠，花、叶、果、枝皆可观赏，适应性强，广泛用于庭院、道路、公园绿化。",
+    culture: "象征富贵、吉祥、繁荣。",
+    habits: "济南大学校园景观区、主干道、庭院、花坛广泛种植。",
+    images: []
+},
+{
+    id: 32,
+    name: "垂丝海棠",
+    latin: "Malus halliana",
+    family: "蔷薇科",
+    genus: "苹果属",
+    type: "乔木",
+    alias: "垂枝海棠、海棠花",
+    features: {
+        株: "落叶小乔木，高达5米，树冠开展，树皮灰褐色、光滑。",
+        茎: "小枝细弱，微弯曲，圆柱形，最初有毛，不久脱落，紫色或紫褐色。",
+        叶: "叶片卵形或椭圆形至长椭卵形，边缘有圆钝细锯齿，叶面深绿色，有光泽。",
+        花: "伞房花序，具花4-6朵，花梗细弱下垂，有稀疏柔毛，紫色，花瓣粉红色，倒卵形。",
+        果实: "果实梨形或倒卵形，直径6-8毫米，略带紫色，成熟很迟。"
+    },
+    uses: "中国传统名贵观赏花木，花姿优美，花色艳丽，花梗细长下垂，为庭院观赏佳品。",
+    culture: "象征温柔、美丽、相思，被誉为“花中神仙”。",
+    habits: "济南大学校园庭院、花坛、景观区、教学楼前有种植。",
+    images: []
+},
+{
+    id: 33,
+    name: "美人梅",
+    latin: "Prunus × blireana 'Meiren'",
+    family: "蔷薇科",
+    genus: "李属",
+    type: "灌木",
+    alias: "红叶美人梅、紫叶梅",
+    features: {
+        株: "落叶小乔木或灌木，高3-5米，树冠不正，小枝细长，紫红色或紫褐色。",
+        茎: "枝条紫褐色，叶似红叶李，花似梅花。",
+        叶: "叶互生，叶片呈卵圆形，紫红色，叶缘有细锯齿。",
+        花: "花重瓣，粉红色，先花后叶，开花繁密，花期春季。",
+        果实: "核果球形，鲜紫红色，果肉鲜脆多汁。"
+    },
+    uses: "优良观赏花木，花叶同观，花色艳丽，花期长，是春季重要观赏树种。",
+    culture: "象征美丽、娇艳、富贵。",
+    habits: "济南大学校园花坛、庭院、景观区、主干道两侧有种植。",
+    images: []
+},
+{
+    id: 34,
+    name: "白玉兰",
+    latin: "Magnolia denudata",
+    family: "木兰科",
+    genus: "木兰属",
+    type: "乔木",
+    alias: "望春、玉兰花、玉堂春",
+    features: {
+        株: "落叶乔木，高达25米，胸径1米，枝广展形成宽阔的树冠，树皮深灰色，粗糙开裂。",
+        茎: "小枝稍粗壮，灰褐色，冬芽及花梗密被淡灰黄色长绢毛。",
+        叶: "叶纸质，倒卵形、宽倒卵形或倒卵状椭圆形，先端宽圆、平截或稍凹，具短突尖。",
+        花: "花先叶开放，直立，芳香，花被片9片，白色，基部常带粉红色，长圆状倒卵形。",
+        果实: "聚合果圆柱形，蓇葖厚木质，褐色，具白色皮孔。"
+    },
+    uses: "中国传统名贵花木，上海市市花，早春开花，洁白芳香，为庭院观赏佳品；花蕾可药用。",
+    culture: "象征高洁、纯洁、高雅、吉祥，是佛教圣花之一。",
+    habits: "济南大学校园核心景观区、图书馆前、行政楼前、主干道两侧广泛种植。",
+    images: []
+},
+{
+    id: 35,
+    name: "广玉兰",
+    latin: "Magnolia grandiflora",
+    family: "木兰科",
+    genus: "木兰属",
+    type: "乔木",
+    alias: "荷花玉兰、洋玉兰、大花玉兰",
+    features: {
+        株: "常绿乔木，高达30米，树皮淡褐色或灰色，薄鳞片状开裂，小枝粗壮。",
+        茎: "芽、嫩枝、嫩叶下面及叶柄均密被褐色或灰褐色短绒毛。",
+        叶: "叶厚革质，椭圆形，长圆状椭圆形或倒卵状椭圆形，叶面深绿色，有光泽，全缘。",
+        花: "花白色，有芳香，花大如荷，直径15-20厘米，花被片9-12片，厚肉质，倒卵形。",
+        果实: "聚合果圆柱状长圆形或卵圆形，密被褐色或淡灰黄色绒毛。"
+    },
+    uses: "著名常绿观赏乔木，树姿雄伟，叶厚光亮，花大芳香，是优良行道树、庭荫树。",
+    culture: "象征高贵、纯洁、生生不息，代表生命力顽强。",
+    habits: "济南大学校园道路两侧、广场、景观区、教学楼前广泛种植。",
+    images: []
+},
+{
+    id: 36,
+    name: "黄玉兰",
+    latin: "Magnolia champaca",
+    family: "木兰科",
+    genus: "木兰属",
+    type: "乔木",
+    alias: "黄兰、黄缅桂、黄金玉兰",
+    features: {
+        株: "常绿乔木，高达10余米，芽、嫩枝、嫩叶和叶柄均被淡黄色的平伏柔毛。",
+        茎: "小枝绿色，老枝灰褐色。",
+        叶: "叶薄革质，披针状卵形或披针状长椭圆形，全缘，叶面绿色，有光泽。",
+        花: "花单生于叶腋，橙黄色，极芳香，花被片15-20片，倒披针形，肉质。",
+        果实: "聚合果长7-15厘米，蓇葖倒卵状长圆形，种子2-4粒，有皱纹。"
+    },
+    uses: "著名芳香观赏花木，花极香，可提取芳香油、制作香料；花、根、果可药用。",
+    culture: "象征富贵、吉祥、高雅，香气浓郁持久。",
+    habits: "济南大学校园景观区、庭院、花坛、教学楼附近有种植。",
+    images: []
+},
+{
+    id: 37,
+    name: "元宝槭",
+    latin: "Acer truncatum",
+    family: "槭树科",
+    genus: "槭属",
+    type: "乔木",
+    alias: "元宝枫、平基槭、五角枫",
+    features: {
+        株: "落叶乔木，高达8-10米，树皮灰褐色或深褐色，深纵裂。",
+        茎: "小枝无毛，当年生枝绿色，多年生枝灰褐色。",
+        叶: "叶纸质，长5-10厘米，宽8-12厘米，常5裂，基部截形，形似元宝。",
+        花: "花黄绿色，杂性，雄花与两性花同株，伞房花序顶生。",
+        果实: "翅果长2.5厘米，小坚果压扁状，两翅张开成锐角。"
+    },
+    uses: "著名秋色叶树种，秋季叶色金黄；木材坚硬，供家具、雕刻用；种子可榨油。",
+    culture: "树形优美，叶形奇特，象征财富、吉祥。",
+    habits: "济南大学校园景观区、道路两侧、绿地有种植。",
+    images: []
+},
+{
+    id: 38,
+    name: "三角槭",
+    latin: "Acer buergerianum",
+    family: "槭树科",
+    genus: "槭属",
+    type: "乔木",
+    alias: "三角枫、丫枫、鸡枫树",
+    features: {
+        株: "落叶乔木，高5-10米，树皮褐色或深褐色，粗糙。",
+        茎: "小枝细瘦，无毛，当年生枝紫色或紫绿色。",
+        叶: "叶纸质，椭圆形或倒卵形，长4-10厘米，常3浅裂，裂片向前伸。",
+        花: "花多数常成伞房花序，花小，黄绿色。",
+        果实: "翅果黄褐色，小坚果特别凸起，两翅张开成锐角或近于直立。"
+    },
+    uses: "优良观赏树种，秋叶暗红色；耐修剪，是盆景优良材料；木材可供细工用材。",
+    culture: "叶形雅致，象征坚韧、雅致。",
+    habits: "济南大学校园水系周边、庭院、景观绿地有种植。",
+    images: []
+},
+{
+    id: 39,
+    name: "金银忍冬",
+    latin: "Lonicera maackii",
+    family: "忍冬科",
+    genus: "忍冬属",
+    type: "灌木",
+    alias: "金银木、胯杷果",
+    features: {
+        株: "落叶灌木，高达6米，茎干直径达10厘米，幼枝、叶、花梗、苞片、萼片外面均被微毛。",
+        茎: "凡幼枝、叶两面脉上、叶柄、苞片外面都被短柔毛。",
+        叶: "叶纸质，形状变化较大，卵状椭圆形至卵状披针形。",
+        花: "花芳香，生于幼枝叶腋，花冠先白色后变黄色，唇形。",
+        果实: "果实暗红色，圆形，直径5-6毫米，种子具蜂窝状微小浅凹点。"
+    },
+    uses: "花、果观赏价值高，秋季红果满枝；优良蜜源植物；全株可药用。",
+    culture: "花开金银相映，象征富贵、多福。",
+    habits: "济南大学校园花坛、庭院、水系周边、景观区广泛种植。",
+    images: []
+},
+{
+    id: 40,
+    name: "红王子锦带花",
+    latin: "Weigela florida 'Red Prince'",
+    family: "忍冬科",
+    genus: "锦带花属",
+    type: "灌木",
+    alias: "红王子锦带",
+    features: {
+        株: "落叶灌木，株高1.5-2米，株型紧密，丛生状，枝条开展。",
+        茎: "老枝灰褐色，嫩枝淡红色，嫩枝有毛。",
+        叶: "单叶对生，叶椭圆形或卵状椭圆形，端锐尖，基部圆形至楔形，缘有锯齿。",
+        花: "花1-4朵成聚伞花序，生于叶腋或枝顶，花冠漏斗状钟形，鲜红色，极其艳丽。",
+        果实: "蒴果细长，圆柱形，顶有短柄状喙，2瓣室间开裂。"
+    },
+    uses: "优良观赏灌木，花期长，花色艳丽，从春开到秋；耐修剪，适用于花坛、绿篱。",
+    culture: "象征蓬勃生机、热情、繁荣。",
+    habits: "济南大学校园花坛、模纹花坛、庭院、主干道两侧广泛种植。",
+    images: []
+},
+{
+    id: 41,
+    name: "华山松",
+    latin: "Pinus armandii",
+    family: "松科",
+    genus: "松属",
+    type: "乔木",
+    alias: "白松、五须松、果松",
+    features: {
+        株: "常绿乔木，高达35米，胸径1米，幼树树皮灰绿色或淡灰色，平滑，老则呈灰色，裂成方形或长方形厚块片固着于树干上。",
+        茎: "一年生枝绿色或灰绿色，无毛，微被白粉。",
+        叶: "针叶5针一束，稀6-7针一束，长8-15厘米，边缘具细锯齿。",
+        花: "雌球花圆柱状长卵形，紫红色，生于新枝近顶端。",
+        果实: "球果圆锥状长卵圆形，长10-20厘米，成熟时种鳞张开，种子脱落。"
+    },
+    uses: "优良用材及观赏树种；种子可食用，为著名坚果；树形挺拔，用于庭院、景观绿化。",
+    culture: "高大挺拔，象征坚韧、长寿、高洁。",
+    habits: "济南大学校园景观区、纪念林、山地绿化区域有种植。",
+    images: []
+},
+{
+    id: 42,
+    name: "日本五针松",
+    latin: "Pinus parviflora",
+    family: "松科",
+    genus: "松属",
+    type: "乔木",
+    alias: "五钗松、日本五须松、五针松",
+    features: {
+        株: "常绿乔木，在原产地高达25米，幼树树皮淡灰色，平滑，大树树皮暗灰色，裂成鳞状块片脱落。",
+        茎: "一年生枝幼嫩时绿色，后呈黄褐色，密生淡黄色柔毛。",
+        叶: "针叶5针一束，微弯曲，长3.5-5.5厘米，边缘具细锯齿。",
+        花: "雌球花卵圆形，淡紫红色，腋生，单生或数个聚生。",
+        果实: "球果卵圆形或卵状椭圆形，成熟时淡褐色。"
+    },
+    uses: "世界著名盆景树种，姿态优美；也用于庭院、假山、景观点缀。",
+    culture: "苍劲古朴，象征长寿、坚韧、高雅。",
+    habits: "济南大学校园盆景园、景观区、庭院、教学楼前有种植。",
+    images: []
+},
+{
+    id: 43,
+    name: "银杏",
+    latin: "Ginkgo biloba",
+    family: "银杏科",
+    genus: "银杏属",
+    type: "乔木",
+    alias: "白果树、公孙树、鸭脚树",
+    features: {
+        株: "落叶大乔木，高达40米，胸径可达4米，幼树树皮近平滑，浅灰色，大树之皮灰褐色，不规则纵裂。",
+        茎: "有长枝与生长缓慢的距状短枝。",
+        叶: "叶互生，在长枝上辐射状散生，在短枝上3-5枚成簇生状，有细长的叶柄，扇形，两面淡绿色。",
+        花: "雌雄异株，球花单生于短枝的叶腋，雄球花成葇荑花序状，雌球花有长梗。",
+        果实: "种子核果状，具长梗，下垂，椭圆形、长圆状倒卵形、卵圆形或近球形。"
+    },
+    uses: "活化石树种，秋季金黄美观，著名行道树；种子可食用、药用；叶可提取银杏黄酮。",
+    culture: "中国国树，象征长寿、坚韧、吉祥、古老。",
+    habits: "济南大学校园主干道、景观区、广场、教学楼前广泛种植。",
+    images: []
+},
+{
+    id: 44,
+    name: "石榴",
+    latin: "Punica granatum",
+    family: "千屈菜科",
+    genus: "石榴属",
+    type: "灌木",
+    alias: "安石榴、山力叶、丹若",
+    features: {
+        株: "落叶灌木或小乔木，高2-7米，幼枝常具棱角，老枝近圆形，顶端常具锐尖长刺。",
+        茎: "枝平滑无毛，幼枝四棱形。",
+        叶: "叶对生或近簇生，纸质，长圆形或倒卵形，叶脉凸起。",
+        花: "花两性，1-5朵生于枝顶或叶腋，花萼钟形，肉质，花瓣倒卵形，红色、黄色或白色。",
+        果实: "浆果近球形，果皮厚，顶端具宿存花萼，种子多数，鲜红色或乳白色。"
+    },
+    uses: "花果兼美树种，观赏、食用、药用兼备；花艳丽，果多汁味甜。",
+    culture: "象征多子多福、吉祥、红火、团圆。",
+    habits: "济南大学校园庭院、花坛、果园区、景观绿地有种植。",
+    images: []
+},
+{
+    id: 45,
+    name: "黄栌",
+    latin: "Cotinus coggygria",
+    family: "漆树科",
+    genus: "黄栌属",
+    type: "灌木",
+    alias: "红叶、黄道栌、黄溜",
+    features: {
+        株: "落叶灌木，高3-5米，木材黄色，树汁有异味，小枝圆柱形，无毛。",
+        茎: "冬芽卵形，鳞片数枚，卵形，无毛。",
+        叶: "单叶互生，叶片全缘或具齿，叶柄细长，无托叶，叶倒卵形或卵圆形。",
+        花: "圆锥花序顶生，花小，杂性，黄绿色，不孕花有紫红色羽毛状花梗。",
+        果实: "核果小，肾形，扁平，绿色，花柱宿存。"
+    },
+    uses: "著名秋色叶树种，秋季红叶似火；烟状花序奇特美观；木材可提取黄色染料。",
+    culture: "红叶象征热烈、思念、丰收，是香山红叶主要树种。",
+    habits: "济南大学校园山坡、景观区、绿地、山地绿化区域有种植。",
+    images: []
+},
+{
+    id: 46,
+    name: "黄连木",
+    latin: "Pistacia chinensis",
+    family: "漆树科",
+    genus: "黄连木属",
+    type: "乔木",
+    alias: "楷木、惜木、孔木",
+    features: {
+        株: "落叶乔木，高达20余米，树干扭曲，树皮暗褐色，呈鳞片状剥落。",
+        茎: "幼枝灰棕色，具细小皮孔，疏被微柔毛或近无毛。",
+        叶: "奇数羽状复叶互生，有小叶5-6对，小叶纸质，披针形或卵状披针形。",
+        花: "花单性异株，先花后叶，圆锥花序腋生，雄花序排列紧密，雌花序排列疏松。",
+        果实: "核果倒卵状球形，略压扁，成熟时紫红色，干后具纵向细条纹。"
+    },
+    uses: "优良秋色叶树种，秋季橙红美观；木材坚硬致密；种子可榨油；全株可药用。",
+    culture: "木质坚硬，象征坚韧、正直、长寿。",
+    habits: "济南大学校园道路两侧、山地、景观区、绿地有种植。",
+    images: []
+},
+{
+    id: 47,
+    name: "皂荚",
+    latin: "Gleditsia sinensis",
+    family: "豆科",
+    genus: "皂荚属",
+    type: "乔木",
+    alias: "皂角、皂荚树、猪牙皂",
+    features: {
+        株: "落叶乔木或小乔木，高可达30米，枝灰色至深褐色，刺粗壮，圆柱形，常分枝，多呈圆锥状。",
+        茎: "小枝粗壮，被短柔毛，老时脱落，皮孔显著。",
+        叶: "一回羽状复叶，小叶纸质，卵状披针形至长圆形，边缘具细锯齿。",
+        花: "花杂性，黄白色，组成总状花序，花序腋生或顶生。",
+        果实: "荚果带状，长12-37厘米，宽2-4厘米，劲直或扭曲，果肉稍厚，两面臌起。"
+    },
+    uses: "木材坚硬；荚果富含皂素，可代肥皂洗涤；种子、刺、果实可药用。",
+    culture: "古老乡土树种，象征实用、坚韧、长寿。",
+    habits: "济南大学校园老校区、绿地、庭院、景观区有种植。",
+    images: []
+},
+{
+    id: 48,
+    name: "柿",
+    latin: "Diospyros kaki",
+    family: "柿科",
+    genus: "柿属",
+    type: "乔木",
+    alias: "柿子树、朱果、猴枣",
+    features: {
+        株: "落叶大乔木，高达10-14米以上，树皮深灰色至灰黑色，方块状开裂。",
+        茎: "枝开展，带绿色至褐色，无毛，散生纵裂的长圆形或狭长圆形皮孔。",
+        叶: "叶纸质，卵状椭圆形至倒卵形或近圆形，叶面深绿色，有光泽。",
+        花: "花雌雄异株，花序腋生，为聚伞花序，花萼绿色，花冠钟状，黄白色。",
+        果实: "浆果球形、扁球形，嫩时绿色，后变黄色、橙黄色，果肉较脆硬，成熟时柔软多汁。"
+    },
+    uses: "著名果树，果实甜美营养；秋季红叶美观，优良观赏树；木材可制家具。",
+    culture: "象征事事如意、红红火火、吉祥。",
+    habits: "济南大学校园果园、庭院、景观区、绿地有种植。",
+    images: []
+},
+{
+    id: 49,
+    name: "君迁子",
+    latin: "Diospyros lotus",
+    family: "柿科",
+    genus: "柿属",
+    type: "乔木",
+    alias: "黑枣、软枣、牛奶柿",
+    features: {
+        株: "落叶乔木，高达30米，树皮灰黑色或灰褐色，深裂或不规则的厚块状剥落。",
+        茎: "幼枝被灰色短柔毛，老枝变无毛，皮孔显著。",
+        叶: "叶近膜质，椭圆形至长椭圆形，叶面深绿色，有光泽，幼时被柔毛，后渐脱落。",
+        花: "花单性，雌雄异株，雄花1-3朵腋生，雌花单生，花冠壶形，淡绿色或带红色。",
+        果实: "浆果近球形或椭圆形，初熟时淡黄色，后变蓝黑色，被白霜。"
+    },
+    uses: "果实可食用、酿酒；是嫁接柿子树的优良砧木；木材坚硬，供家具、文具用。",
+    culture: "果实小巧，象征朴实、丰收、吉祥。",
+    habits: "济南大学校园山地、绿地、景观区、老校区有种植。",
+    images: []
+},
+{
+    id: 50,
+    name: "雪柳",
+    latin: "Fontanesia fortunei",
+    family: "木犀科",
+    genus: "雪柳属",
+    alias: "挂梁青、珍珠花、五谷树",
+    features: {
+        株: "落叶灌木或小乔木，高达8米，树皮灰褐色，枝灰白色，圆柱形，小枝淡黄色或淡绿色。",
+        茎: "小枝四棱形，无毛，有光泽。",
+        叶: "叶片纸质，披针形、卵状披针形或狭卵形，全缘。",
+        花: "圆锥花序顶生或腋生，花两性或杂性同株，花小，白色，有香味。",
+        果实: "翅果扁平，卵形或倒卵形，周围有翅，顶端微凹。"
+    },
+    uses: "花繁洁白如雪，叶形似柳，观赏价值高；可作绿篱、切花；根系发达，固土护坡。",
+    culture: "花开似雪，象征纯洁、清新、吉祥。",
+    habits: "济南大学校园水系周边、绿篱、庭院、花坛有种植。",
+    images: []
+},
+{
+    id: 51,
+    name: "乌桕",
+    latin: "Sapium sebiferum",
+    family: "大戟科",
+    genus: "乌桕属",
+    type: "乔木",
+    alias: "腊子树、桕子树、木子树",
+    features: {
+        株: "落叶乔木，高可达15米，树皮暗灰色，有纵裂纹，枝广展，具皮孔。",
+        茎: "小枝纤细，无毛。",
+        叶: "叶互生，纸质，叶片菱形、菱状卵形或稀有菱状倒卵形，全缘。",
+        花: "花单性，雌雄同株，聚集成顶生、长6-12厘米的总状花序。",
+        果实: "蒴果梨状球形，成熟时黑色，种子扁球形，黑色，外被白色蜡质假种皮。"
+    },
+    uses: "著名秋色叶树种，秋季红叶鲜艳；种子外被蜡质，可制蜡烛、肥皂；木材可供家具、雕刻用。",
+    culture: "红叶似火，象征热烈、丰收、吉祥。",
+    habits: "济南大学校园水系周边、湿地、景观区、绿地有种植。",
+    images: []
+},
+{
+    id: 52,
+    name: "酸枣",
+    latin: "Ziziphus jujuba var. spinosa",
+    family: "鼠李科",
+    genus: "枣属",
+    type: "灌木",
+    alias: "棘、山枣、葛针",
+    features: {
+        株: "落叶灌木或小乔木，高1-4米，小枝呈之字形弯曲，紫褐色。",
+        茎: "有长枝、短枝和无芽小枝，紫红色或灰褐色，呈之字形曲折。",
+        叶: "叶互生，叶片椭圆形至卵状披针形，边缘有细锯齿，基生三出脉。",
+        花: "花黄绿色，2-3朵簇生于叶腋，花瓣5片，雄蕊5枚。",
+        果实: "核果小，近球形或短矩圆形，成熟时红褐色，味酸甜。"
+    },
+    uses: "果实可鲜食、酿酒、制醋；种仁为中药“酸枣仁”，安神助眠；可作绿篱、水土保持。",
+    culture: "生命力顽强，象征坚韧、朴实、丰收。",
+    habits: "济南大学校园山坡、荒地、绿地、山地绿化区域有种植。",
+    images: []
+},
+{
+    id: 53,
+    name: "黄刺玫",
+    latin: "Rosa xanthina",
+    family: "蔷薇科",
+    genus: "蔷薇属",
+    type: "灌木",
+    alias: "刺玖花、黄刺莓、破皮刺玫",
+    features: {
+        株: "落叶灌木，高2-3米，枝粗壮，密集，披散，小枝无毛，有散生皮刺，无针刺。",
+        茎: "直立，枝有刺，刺黄色，基部宽而扁。",
+        叶: "小叶7-13片，宽卵形或近圆形，边缘有圆钝锯齿。",
+        花: "花单生于叶腋，重瓣或半重瓣，黄色，无苞片，花瓣宽倒卵形。",
+        果实: "果球形或倒卵圆形，紫褐色或黑褐色，无毛，萼片反折。"
+    },
+    uses: "春季黄花满枝，美丽芳香；可作绿篱、观赏；花可提取芳香油；果实可食用、酿酒。",
+    culture: "花色金黄，象征阳光、富贵、吉祥。",
+    habits: "济南大学校园花坛、庭院、绿篱、山坡绿化有种植。",
+    images: []
+},
+{
+    id: 54,
+    name: "月季",
+    latin: "Rosa chinensis",
+    family: "蔷薇科",
+    genus: "蔷薇属",
+    type: "灌木",
+    alias: "月月红、月月花、长春花",
+    features: {
+        株: "落叶或常绿灌木，高1-2米，小枝粗壮，圆柱形，近无毛，有短粗的钩状皮刺。",
+        茎: "直立，枝干有刺，刺短而扁。",
+        叶: "小叶3-5片，稀7片，宽卵形至卵状长圆形，边缘有锐锯齿。",
+        花: "花几朵集生，稀单生，花瓣重瓣至半重瓣，红色、粉红色至白色，花期4-9月。",
+        果实: "果卵球形或梨形，红色，萼片脱落。"
+    },
+    uses: "中国十大名花，花中皇后，四季开花，观赏价值极高；可提取香料、药用。",
+    culture: "象征爱情、美丽、长寿、繁荣。",
+    habits: "济南大学校园花坛、庭院、主干道、景观区广泛种植。",
+    images: []
+},
+{
+    id: 55,
+    name: "榆叶梅",
+    latin: "Amygdalus triloba",
+    family: "蔷薇科",
+    genus: "李属",
+    type: "灌木",
+    alias: "小桃红、榆梅、鸾枝",
+    features: {
+        株: "落叶灌木，高2-3米，枝条开展，具多数短小枝，小枝灰色，一年生枝灰褐色，无毛或幼时微被短柔毛。",
+        茎: "冬芽短小，长2-3毫米。",
+        叶: "叶宽椭圆形至倒卵形，先端3裂状，边缘有粗重锯齿，形似榆树叶。",
+        花: "花1-2朵，先于叶开放，花瓣粉红色，倒卵形或近圆形。",
+        果实: "果实近球形，红色，被毛，果肉薄，成熟时开裂。"
+    },
+    uses: "春季重要观花灌木，花繁色艳，形似梅花；可作庭院、花坛、绿篱观赏。",
+    culture: "花开似锦，象征春天、繁荣、吉祥。",
+    habits: "济南大学校园花坛、庭院、主干道、景观区广泛种植。",
+    images: []
+},
+{
+    id: 56,
+    name: "二球悬铃木",
+    latin: "Platanus × acerifolia",
+    family: "悬铃木科",
+    genus: "悬铃木属",
+    type: "乔木",
+    alias: "英国梧桐、法桐",
+    features: {
+        株: "落叶大乔木，高可达35米，树皮光滑，大片块状脱落，呈灰绿、灰白色斑驳状。",
+        茎: "枝条开展，树冠广阔，嫩枝密生灰黄色柔毛。",
+        叶: "叶轮廓阔卵形，宽12-25厘米，长10-24厘米，3-5裂，边缘有粗大锯齿。",
+        花: "花单性，雌雄同株，头状花序，黄绿色。",
+        果实: "聚花果球形，通常2个一串，下垂，小坚果倒圆锥形。"
+    },
+    uses: "世界著名行道树，生长快、遮荫好、耐修剪、抗污染，被誉为“行道树之王”。",
+    culture: "树冠宽广，象征包容、生机、繁荣。",
+    habits: "济南大学校园主干道、广场、操场周边广泛种植。",
+    images: []
+},
+{
+    id: 57,
+    name: "木槿",
+    latin: "Hibiscus syriacus",
+    family: "锦葵科",
+    genus: "木槿属",
+    type: "灌木",
+    alias: "朝开暮落花、喇叭花、荆条",
+    features: {
+        株: "落叶灌木，高3-4米，小枝密被黄色星状绒毛。",
+        茎: "树皮灰褐色，老枝具明显皮孔。",
+        叶: "叶菱形至三角状卵形，长3-10厘米，宽2-4厘米，边缘具不规则齿裂。",
+        花: "花单生于枝端叶腋间，花冠钟形，色彩丰富，有白、粉、紫、红等色。",
+        果实: "蒴果卵圆形，直径约12毫米，密被黄色星状绒毛。"
+    },
+    uses: "夏秋重要观花灌木，花期长、花量大；耐修剪，可作花篱；花可食用、药用。",
+    culture: "象征温柔、坚韧、永恒，是韩国国花。",
+    habits: "济南大学校园花坛、庭院、绿篱、教学楼周边广泛种植。",
+    images: []
+},
+{
+    id: 58,
+    name: "蔷薇",
+    latin: "Rosa multiflora",
+    family: "蔷薇科",
+    genus: "蔷薇属",
+    type: "灌木",
+    alias: "多花蔷薇、野蔷薇、刺蘼",
+    features: {
+        株: "落叶攀援灌木，高1-2米，小枝圆柱形，通常无毛，有短、粗稍弯曲皮束。",
+        茎: "枝条细长，攀援生长，刺短而粗。",
+        叶: "小叶5-9片，倒卵形、长圆形或卵形，边缘有尖锐单锯齿。",
+        花: "圆锥状伞房花序，花多朵，花瓣白色、粉色，芳香。",
+        果实: "果近球形，直径6-8毫米，红褐色或紫褐色，有光泽，无毛。"
+    },
+    uses: "著名攀援观赏花卉，花繁叶茂、香气浓郁；可作花架、花墙、绿篱；根、花可药用。",
+    culture: "象征浪漫、爱情、思念、美好。",
+    habits: "济南大学校园围墙、花架、庭院、景观区广泛种植。",
+    images: []
+},
+{
+    id: 59,
+    name: "垂柳",
+    latin: "Salix babylonica",
+    family: "杨柳科",
+    genus: "柳属",
+    type: "乔木",
+    alias: "水柳、垂丝柳、清明柳",
+    features: {
+        株: "落叶乔木，高可达12-18米，树冠开展而疏散，树皮灰黑色，不规则开裂。",
+        茎: "枝细弱下垂，淡褐黄色、淡褐色或带紫色，无毛。",
+        叶: "叶线状披针形，长9-16厘米，宽5-15毫米，边缘有锯齿。",
+        花: "葇荑花序，先叶开放或与叶同时开放，雌雄异株。",
+        果实: "蒴果绿黄褐色，种子有白色丝状长毛。"
+    },
+    uses: "优良水边绿化树种，枝条柔软下垂，姿态优美；耐水湿，固土能力强。",
+    culture: "象征离别、思念、春天、生机。",
+    habits: "济南大学校园水系周边、湖畔、河边、绿地广泛种植。",
+    images: []
+},
+{
+    id: 60,
+    name: "毛白杨",
+    latin: "Populus tomentosa",
+    family: "杨柳科",
+    genus: "杨属",
+    type: "乔木",
+    alias: "大叶杨、响杨、白杨",
+    features: {
+        株: "落叶大乔木，高达30米，树干通直，树皮灰绿色至灰白色，光滑，老时纵裂。",
+        茎: "长枝和萌枝密被灰黄色绒毛，老枝光滑。",
+        叶: "叶卵形或三角状卵形，长10-15厘米，边缘有波状牙齿，叶背密被绒毛。",
+        花: "葇荑花序，雄花序长10-14厘米，雌花序长4-7厘米。",
+        果实: "蒴果圆锥形，2瓣裂，种子小，有白色长毛。"
+    },
+    uses: "北方重要速生用材及行道树种，树干挺拔、生长迅速；木材供造纸、家具、建筑用。",
+    culture: "高大挺拔，象征正直、坚韧、向上。",
+    habits: "济南大学校园道路两侧、防护林、绿地广泛种植。",
+    images: []
+},
+{
+    id: 61,
+    name: "水曲柳",
+    latin: "Fraxinus mandschurica",
+    family: "木犀科",
+    genus: "梣属",
+    type: "乔木",
+    alias: "东北梣、曲柳",
+    features: {
+        株: "落叶大乔木，高达30米，树皮厚，灰褐色，纵裂。",
+        茎: "小枝对生，四棱形，无毛，具皮孔。",
+        叶: "奇数羽状复叶，长25-30厘米，小叶7-11枚，纸质，长圆形至卵状披针形。",
+        花: "圆锥花序生于去年生枝侧，先叶开放，花单性，雌雄异株。",
+        果实: "翅果稍扭曲，长圆形至倒卵状披针形，扁平。"
+    },
+    uses: "珍贵用材树种，木材坚硬致密、纹理美观，为高级家具、乐器用材；优良绿化树种。",
+    culture: "材质优良，象征坚韧、珍贵、稳重。",
+    habits: "济南大学校园景观区、林地、绿地有种植。",
+    images: []
+},
+{
+    id: 62,
+    name: "流苏树",
+    latin: "Chionanthus retusus",
+    family: "木犀科",
+    genus: "流苏树属",
+    type: "乔木",
+    alias: "四月雪、萝卜丝花、牛筋子",
+    features: {
+        株: "落叶乔木，高达20米，树皮灰褐色，薄片状剥落。",
+        茎: "小枝灰褐色，圆柱形，疏被长柔毛或无毛。",
+        叶: "叶片革质，长圆形、椭圆形或圆形，全缘或有小锯齿。",
+        花: "圆锥花序顶生，花白色，花冠4深裂，裂片狭长，形似流苏。",
+        果实: "核果椭圆形，蓝黑色，被白粉。"
+    },
+    uses: "著名观赏花木，春季花开如雪、清丽宜人；国家二级保护植物；花可制茶、药用。",
+    culture: "花开似雪，象征纯洁、吉祥、高雅。",
+    habits: "济南大学校园庭院、景观区、花坛、教学楼前有种植。",
+    images: []
+},
+{
+    id: 63,
+    name: "鸢尾",
+    latin: "Iris tectorum",
+    family: "鸢尾科",
+    genus: "鸢尾属",
+    type: "草本",
+    alias: "蓝蝴蝶、紫蝴蝶、扁竹花",
+    features: {
+        株: "多年生草本，植株基部围有老叶残留的膜质叶鞘及纤维，根状茎粗壮。",
+        茎: "根状茎短，二歧分枝，斜伸。",
+        叶: "叶基生，黄绿色，宽剑形，中部略宽，基部鞘状，顶端渐尖。",
+        花: "花茎光滑，花蓝紫色，直径约10厘米，花被管细长，上端膨大成喇叭形。",
+        果实: "蒴果长椭圆形或倒卵形，种子黑褐色，梨形。"
+    },
+    uses: "著名球根花卉，花大色艳、叶姿优美；适用于花坛、地被、切花；根茎可药用。",
+    culture: "象征光明、自由、爱情、高雅。",
+    habits: "济南大学校园花坛、林下、绿地、水系周边广泛种植。",
+    images: []
+},
+{
+    id: 64,
+    name: "二月兰",
+    latin: "Orychophragmus violaceus",
+    family: "十字花科",
+    genus: "诸葛菜属",
+    type: "草本",
+    alias: "诸葛菜、二月蓝、菜子花",
+    features: {
+        株: "一年或二年生草本，高10-50厘米，无毛，茎单一，直立，基部或上部稍有分枝。",
+        茎: "茎直立，仅有单一茎。",
+        叶: "基生叶及下部茎生叶大头羽状全裂，上部叶长圆形或窄卵形，抱茎。",
+        花: "花紫色、浅红色或白色，花萼筒状，花瓣宽倒卵形，密生细脉纹。",
+        果实: "长角果线形，长7-10厘米，具4棱，裂瓣有1凸出中脊。"
+    },
+    uses: "优良早春地被花卉，耐阴、耐寒、自播繁衍能力强；嫩茎叶可食用。",
+    culture: "早春开花，象征春天、希望、生机。",
+    habits: "济南大学校园林下、坡地、绿地、路边广泛自然生长。",
+    images: []
+},
+{
+    id: 65,
+    name: "地黄",
+    latin: "Rehmannia glutinosa",
+    family: "玄参科",
+    genus: "地黄属",
+    type: "草本",
+    alias: "生地、怀庆地黄、小鸡喝酒",
+    features: {
+        株: "多年生草本，高15-30厘米，根茎肉质，鲜时黄色，茎紫红色。",
+        茎: "茎单一，直立，被长柔毛和腺毛。",
+        叶: "叶通常在茎基部集成莲座状，向上则强烈缩小成苞片，叶片卵形至长椭圆形，边缘具不规则圆齿。",
+        花: "花在茎顶部略排列成总状花序，花冠筒状，紫红色，内面黄紫色，外面紫红色。",
+        果实: "蒴果卵形至长卵形，长1-1.5厘米，先端具喙。"
+    },
+    uses: "著名中药材，根茎为“生地、熟地”，滋阴补血；花形美观，可观赏。",
+    culture: "药用价值高，象征健康、长寿、吉祥。",
+    habits: "济南大学校园路边、荒地、草地、山坡野生。",
+    images: []
+},
+{
+    id: 66,
+    name: "构树",
+    latin: "Broussonetia papyrifera",
+    family: "桑科",
+    genus: "构属",
+    type: "乔木",
+    alias: "楮桃、构桃树、谷树",
+    features: {
+        株: "落叶乔木，高10-20米，树皮暗灰色，小枝密生柔毛。",
+        茎: "小枝粗壮，灰褐色，密被白色绒毛。",
+        叶: "叶螺旋状排列，广卵形至长椭圆状卵形，不分裂或3-5裂，边缘具粗锯齿。",
+        花: "花单性，雌雄异株，雄花序为葇荑花序，雌花序球形头状。",
+        果实: "聚花果球形，成熟时橙红色，肉质，瘦果具与等长的柄。"
+    },
+    uses: "适应性极强，抗污染，为先锋绿化树种；树皮可造纸；叶可喂猪；果可食用、药用。",
+    culture: "生命力顽强，象征坚韧、朴实、生机。",
+    habits: "济南大学校园荒地、山坡、路边、绿地广泛生长。",
+    images: []
+},
+{
+    id: 67,
+    name: "小叶黄杨",
+    latin: "Buxus sinica var. parvifolia",
+    family: "黄杨科",
+    genus: "黄杨属",
+    type: "灌木",
+    alias: "瓜子黄杨、千年矮、小黄杨",
+    features: {
+        株: "常绿灌木，高0.5-1米，树干灰白光洁，枝条密生，四棱形。",
+        茎: "小枝四棱形，全面被短柔毛或外方相对两侧面无毛。",
+        叶: "叶对生，革质，叶形小，阔椭圆形或阔卵形，叶面光亮。",
+        花: "花簇生叶腋或枝端，花小，黄绿色，无花瓣。",
+        果实: "蒴果近球形，长6-8毫米，宿存花柱长2-3毫米。"
+    },
+    uses: "最常用常绿绿篱树种，耐修剪、四季常青、生长缓慢；可作盆景。",
+    culture: "四季常青，象征坚韧、永恒、长寿。",
+    habits: "济南大学校园绿篱、花坛、造型、路边广泛种植。",
+    images: []
+},
+{
+    id: 68,
+    name: "金边黄杨",
+    latin: "Euonymus japonicus 'Aureo-marginatus'",
+    family: "卫矛科",
+    genus: "卫矛属",
+    type: "灌木",
+    alias: "金边冬青卫矛、金边大叶黄杨",
+    features: {
+        株: "常绿灌木，高可达3米，小枝四棱，具细微皱突。",
+        茎: "枝叶茂密，四季常青。",
+        叶: "叶革质，有光泽，倒卵形或椭圆形，边缘有细钝齿，叶缘金黄色，中央绿色。",
+        花: "聚伞花序腋生，花白绿色，直径5-7毫米。",
+        果实: "蒴果近球形，淡粉红色，假种皮橘红色。"
+    },
+    uses: "著名彩叶绿篱树种，叶色金黄亮丽，观赏价值高；广泛用于模纹花坛、绿篱。",
+    culture: "色彩鲜艳，象征阳光、活力、希望。",
+    habits: "济南大学校园花坛、绿篱、模纹图案、路边广泛种植。",
+    images: []
+},
+{
+    id: 69,
+    name: "小叶女贞",
+    latin: "Ligustrum quihoui",
+    family: "木犀科",
+    genus: "女贞属",
+    type: "灌木",
+    alias: "小叶冬青、小白蜡、楝青",
+    features: {
+        株: "落叶或半常绿灌木，高1-3米，小枝淡棕色，圆柱形，密被微柔毛，后脱落。",
+        茎: "枝条开展，圆柱形，疏生圆形皮孔。",
+        叶: "叶片薄革质，形状和大小变异较大，披针形、长圆状椭圆形至倒卵状长圆形。",
+        花: "圆锥花序顶生，近圆柱形，花白色，芳香，无梗。",
+        果实: "核果宽椭圆形，黑色，长8-9毫米，径4-5毫米。"
+    },
+    uses: "优良绿篱及造型树种，耐修剪、生长快、四季常绿；可作盆景；叶、树皮可药用。",
+    culture: "枝叶细密，象征精致、坚韧、永恒。",
+    habits: "济南大学校园绿篱、花坛、造型、路边广泛种植。",
+    images: []
+},
+{
+    id: 70,
+    name: "槐",
+    latin: "Styphnolobium japonicum",
+    family: "豆科",
+    genus: "槐属",
+    type: "乔木",
+    alias: "国槐、家槐、豆槐、金药树",
+    features: {
+        株: "落叶乔木，高达25米，树皮灰褐色，具纵裂纹，树冠球形。",
+        茎: "当年生枝绿色，无毛，二年生枝灰褐色。",
+        叶: "奇数羽状复叶，小叶4-7对，卵状披针形，纸质，全缘。",
+        花: "圆锥花序顶生，花白色或淡黄色，蝶形花冠，花期7-8月。",
+        果实: "荚果肉质，连珠状，不开裂，内含1-6粒种子，果期8-10月。"
+    },
+    uses: "优良行道树、庭荫树；抗污染能力强；木材供建筑、家具、雕刻；花、果、叶、根皮可入药。",
+    culture: "中国传统名树，象征吉祥、长寿、富贵，古代常植于庭院、文庙。",
+    habits: "济南大学校园主干道、广场、老校区绿地广泛种植。",
+    images: []
+},
+{
+    id: 71,
+    name: "灯台树",
+    latin: "Cornus controversa",
+    family: "山茱萸科",
+    genus: "梾木属",
+    type: "乔木",
+    alias: "瑞木、六角树、女儿木",
+    features: {
+        株: "落叶乔木，高6-15米，树皮光滑暗灰色，侧枝轮生呈层状，形似灯台。",
+        茎: "当年生枝紫红绿色，二年生枝淡绿色，有半月形叶痕。",
+        叶: "叶互生，阔卵形，全缘，叶背灰白色，侧脉6-7对，弓形内弯。",
+        花: "伞房状聚伞花序顶生，花小白色，密集，花期5-6月。",
+        果实: "核果球形，成熟时蓝黑色，果期7-10月。"
+    },
+    uses: "树形优美奇特，观赏价值极高；木材供建筑、家具、雕刻；种子可榨油；树皮可提栲胶。",
+    culture: "枝条层层平展如灯台，寓意光明吉祥，又名“瑞木”。",
+    habits: "济南大学校园绿地、山坡、景观区有种植。",
+    images: []
+},
+{
+    id: 72,
+    name: "迎春花",
+    latin: "Jasminum nudiflorum",
+    family: "木犀科",
+    genus: "素馨属",
+    type: "灌木",
+    alias: "金腰带、黄素馨、小黄花",
+    features: {
+        株: "落叶灌木，高0.3-5米，枝条细长拱形下垂，呈披散状。",
+        茎: "小枝绿色，四棱形，棱上具狭翼，光滑无毛。",
+        叶: "三出复叶对生，小叶卵形至椭圆形，全缘，先端锐尖。",
+        花: "花单生叶腋，先叶开放，花冠黄色，高脚碟状，裂片5-6枚，花期2-4月。",
+        果实: "极少结实，浆果黑色。"
+    },
+    uses: "早春重要观花灌木，枝条下垂美观；常作绿篱、地被、盆栽；叶、花可入药。",
+    culture: "百花中开花最早，迎来春天，象征希望、活力、迎春纳福。",
+    habits: "济南大学校园花坛、绿篱、路边、假山旁广泛种植。",
+    images: []
+},
+{
+    id: 73,
+    name: "连翘",
+    latin: "Forsythia suspensa",
+    family: "木犀科",
+    genus: "连翘属",
+    type: "灌木",
+    alias: "黄花条、连壳、青翘、落翘",
+    features: {
+        株: "落叶灌木，高可达3米，枝干丛生，直立或拱形下垂。",
+        茎: "小枝棕褐色，圆柱形，中空，无毛。",
+        叶: "单叶或三小叶对生，卵形至椭圆状卵形，边缘上半部有粗锯齿。",
+        花: "花单生或数朵簇生叶腋，先叶开放，花冠黄色，裂片4枚，花期3-4月。",
+        果实: "蒴果卵球形，表面疏生皮孔，果期7-9月。"
+    },
+    uses: "早春观花灌木；果实为著名中药“连翘”，清热解毒、消肿散结；可作绿篱、护坡。",
+    culture: "早春黄花满枝，象征明媚、吉祥、生机勃勃。",
+    habits: "济南大学校园花坛、绿篱、路边、景观绿地广泛种植。",
+    images: []
+},
+{
+    id: 74,
+    name: "紫荆",
+    latin: "Cercis chinensis",
+    family: "豆科",
+    genus: "紫荆属",
+    type: "灌木",
+    alias: "紫珠、裸枝树、箩筐树",
+    features: {
+        株: "落叶灌木，高2-5米，树皮和小枝灰白色，丛生状。",
+        茎: "小枝细长，略呈之字形，皮孔明显。",
+        叶: "单叶互生，近圆形，先端急尖，基部心形，全缘，叶脉掌状。",
+        花: "花紫红色或粉红色，簇生于老枝、主干上，先叶开放，花期3-4月。",
+        果实: "荚果扁平，狭披针形，成熟时紫褐色，果期8-10月。"
+    },
+    uses: "著名春季观花灌木，花色艳丽；树皮、花、果实可入药；优良庭院观赏树种。",
+    culture: "象征家庭和睦、骨肉情深、兄弟团结，古称“兄弟树”。",
+    habits: "济南大学校园花坛、庭院、教学楼周边、绿地广泛种植。",
+    images: []
+},
+{
+    id: 75,
+    name: "梅",
+    latin: "Armeniaca mume",
+    family: "蔷薇科",
+    genus: "杏属",
+    type: "乔木",
+    alias: "梅花、春梅、干枝梅",
+    features: {
+        株: "落叶小乔木，高4-10米，树皮浅灰色或带绿色，平滑。",
+        茎: "小枝绿色，光滑无毛，细长挺拔。",
+        叶: "叶片卵形或椭圆形，边缘常具小锐锯齿，灰绿色。",
+        花: "花单生或2朵同生，先叶开放，芳香，花瓣白色至粉红色，花期冬春季。",
+        果实: "核果近球形，黄色或绿白色，味酸，果期5-6月。"
+    },
+    uses: "中国十大名花之首，傲雪绽放，观赏价值极高；花可提取香精；果实可食用、药用。",
+    culture: "象征坚韧不拔、高洁不屈、傲骨与吉祥，是中华民族精神象征。",
+    habits: "济南大学校园景观区、庭院、花坛、文化绿地有种植。",
+    images: []
+},
+{
+    id: 76,
+    name: "圆柏",
+    latin: "Sabina chinensis",
+    family: "柏科",
+    genus: "圆柏属",
+    type: "乔木",
+    alias: "刺柏、红心柏、珍珠柏",
+    features: {
+        株: "常绿乔木，高达20米，树冠尖塔形或圆锥形，老树树冠广圆形。",
+        茎: "树皮灰褐色，成条状纵裂，枝条斜上伸展。",
+        叶: "叶二型，幼树为刺形叶，老树为鳞形叶，排列紧密。",
+        花: "雌雄异株，球花单生枝顶，花期3-4月。",
+        果实: "球果近圆形，熟时暗褐色，被白粉，果期翌年10-11月。"
+    },
+    uses: "优良园林绿化树种，耐修剪可作绿篱、盆景；木材坚韧耐用；枝叶可提取芳香油。",
+    culture: "象征坚贞、长寿、不朽，常植于陵园、庭院、庙宇。",
+    habits: "济南大学校园花坛、绿地、路边、景观带均有种植。",
+    images: []
+}
+        ];
+
+        let favorites = JSON.parse(localStorage.getItem('plantFavorites')) || [];
+        let currentPlant = null;
+        let currentFilter = { type: 'all', family: 'all', search: '' };
+
+        const browsePage = document.getElementById('browsePage');
+        const favoritesPage = document.getElementById('favoritesPage');
+        const mapPage = document.getElementById('mapPage');
+        const aboutPage = document.getElementById('aboutPage');
+        const detailPage = document.getElementById('detailPage');
+        const plantList = document.getElementById('plantList');
+        const favoritesList = document.getElementById('favoritesList');
+        const emptyFavorites = document.getElementById('emptyFavorites');
+        const searchInput = document.getElementById('searchInput');
+        const plantCount = document.getElementById('plantCount');
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const lifeFilters = document.querySelectorAll('.life-filter');
+
+        function init() {
+            generateFamilyFilters();
+            renderPlantList();
+            updateFavoritesUI();
+            setupEventListeners();
+        }
+
+        function generateFamilyFilters() {
+            const container = document.getElementById('familyFilterContainer');
+            const families = [...new Set(plants.map(p => p.family))];
+            families.sort((a, b) => a.localeCompare(b, 'zh-CN'));
+
+            container.innerHTML = `
+                <button class="family-filter px-3 py-1.5 rounded-full bg-primary text-white text-xs whitespace-nowrap" data-family="all">全部</button>
+            `;
+
+            families.forEach(family => {
+                const btn = document.createElement('button');
+                btn.className = 'family-filter px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-xs whitespace-nowrap';
+                btn.dataset.family = family;
+                btn.textContent = family;
+                container.appendChild(btn);
+            });
+
+            document.querySelectorAll('.family-filter').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.family-filter').forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white');
+                        b.classList.add('bg-gray-100', 'hover:bg-gray-200');
+                    });
+                    btn.classList.remove('bg-gray-100', 'hover:bg-gray-200');
+                    btn.classList.add('bg-primary', 'text-white');
+                    currentFilter.family = btn.dataset.family;
+                    renderPlantList();
+                });
+            });
+        }
+
+        function renderPlantList() {
+            plantList.innerHTML = '';
+            let filteredPlants = plants.filter(plant => {
+                if (currentFilter.type !== 'all' && plant.type !== currentFilter.type) return false;
+                if (currentFilter.family !== 'all' && plant.family !== currentFilter.family) return false;
+                
+                if (currentFilter.search) {
+                    const keyword = currentFilter.search.toLowerCase();
+                    const matchName = plant.name.toLowerCase().includes(keyword);
+                    const matchLatin = plant.latin.toLowerCase().includes(keyword);
+                    const matchFamily = plant.family.toLowerCase().includes(keyword);
+                    const matchGenus = plant.genus.toLowerCase().includes(keyword);
+                    const matchFeatures = Object.values(plant.features).some(v => v.toLowerCase().includes(keyword));
+                    if (!matchName && !matchLatin && !matchFamily && !matchGenus && !matchFeatures) return false;
+                }
+                return true;
+            });
+
+            plantCount.textContent = `共 ${filteredPlants.length} 种植物`;
+
+            filteredPlants.forEach(plant => {
+                const isFavorite = favorites.includes(plant.id);
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow';
+                card.innerHTML = `
+                    <div class="p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-medium text-lg">${plant.name}</h3>
+                                <p class="text-gray-500 text-sm italic">${plant.latin}</p>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <span class="text-xs bg-muted text-primary px-2 py-1 rounded-full">${plant.family} | ${plant.genus}</span>
+                                    <span class="text-xs bg-muted text-primary px-2 py-1 rounded-full">${plant.type}</span>
+                                </div>
+                            </div>
+                            <button class="favorite-toggle text-gray-400 hover:text-red-500 transition-colors" data-id="${plant.id}">
+                                <i class="fa ${isFavorite ? 'fa-heart text-red-500' : 'fa-heart-o'}"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('.favorite-toggle')) {
+                        openDetailPage(plant.id);
+                    }
+                });
+                
+                const favoriteToggle = card.querySelector('.favorite-toggle');
+                favoriteToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFavorite(plant.id);
+                    renderPlantList();
+                    updateFavoritesUI();
+                });
+                
+                plantList.appendChild(card);
+            });
+        }
+
+        function renderFavoritesList() {
+            favoritesList.innerHTML = '';
+            const favoritePlants = plants.filter(plant => favorites.includes(plant.id));
+            
+            favoritePlants.forEach(plant => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow';
+                card.innerHTML = `
+                    <div class="p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-medium text-lg">${plant.name}</h3>
+                                <p class="text-gray-500 text-sm italic">${plant.latin}</p>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <span class="text-xs bg-muted text-primary px-2 py-1 rounded-full">${plant.family} | ${plant.genus}</span>
+                                    <span class="text-xs bg-muted text-primary px-2 py-1 rounded-full">${plant.type}</span>
+                                </div>
+                            </div>
+                            <button class="favorite-toggle text-red-500 hover:text-gray-400 transition-colors" data-id="${plant.id}">
+                                <i class="fa fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('.favorite-toggle')) {
+                        openDetailPage(plant.id);
+                    }
+                });
+                
+                const favoriteToggle = card.querySelector('.favorite-toggle');
+                favoriteToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFavorite(plant.id);
+                    renderFavoritesList();
+                    renderPlantList();
+                    updateFavoritesUI();
+                });
+                
+                favoritesList.appendChild(card);
+            });
+        }
+
+        function updateFavoritesUI() {
+            if (favorites.length === 0) {
+                emptyFavorites.classList.remove('hidden');
+                favoritesList.classList.add('hidden');
+            } else {
+                emptyFavorites.classList.add('hidden');
+                favoritesList.classList.remove('hidden');
+                renderFavoritesList();
+            }
+        }
+
+        function toggleFavorite(id) {
+            const index = favorites.indexOf(id);
+            if (index === -1) {
+                favorites.push(id);
+            } else {
+                favorites.splice(index, 1);
+            }
+            localStorage.setItem('plantFavorites', JSON.stringify(favorites));
+        }
+
+        function openDetailPage(id) {
+            currentPlant = plants.find(plant => plant.id === id);
+            if (!currentPlant) return;
+
+            document.getElementById('detailName').textContent = currentPlant.name;
+            document.getElementById('detailLatin').textContent = currentPlant.latin;
+            document.getElementById('detailFamily').textContent = `${currentPlant.family} | ${currentPlant.genus}`;
+            document.getElementById('detailType').textContent = currentPlant.type;
+            document.getElementById('detailAlias').textContent = currentPlant.alias;
+            document.getElementById('detailUses').textContent = currentPlant.uses;
+            document.getElementById('detailCulture').textContent = currentPlant.culture;
+            document.getElementById('detailhabits').textContent = currentPlant.habits;
+
+            const featuresContainer = document.getElementById('detailFeatures');
+            featuresContainer.innerHTML = '';
+            for (const [key, value] of Object.entries(currentPlant.features)) {
+                const feature = document.createElement('div');
+                feature.innerHTML = `
+                    <p class="font-medium text-gray-800">${key}：</p>
+                    <p class="text-gray-700 ml-4">${value}</p>
+                `;
+                featuresContainer.appendChild(feature);
+            }
+
+            renderMainImage();
+            renderGallery();
+
+            const isFavorite = favorites.includes(id);
+            document.getElementById('favoriteBtn').innerHTML = `<i class="fa ${isFavorite ? 'fa-heart text-red-500' : 'fa-heart-o'}"></i>`;
+
+            browsePage.classList.add('hidden');
+            favoritesPage.classList.add('hidden');
+            mapPage.classList.add('hidden');
+            aboutPage.classList.add('hidden');
+            detailPage.classList.remove('hidden');
+            detailPage.classList.add('flex');
+        }
+
+        function renderMainImage() {
+            const detailMainImage = document.getElementById('detailMainImage');
+            if (currentPlant.images && currentPlant.images.length > 0) {
+                detailMainImage.innerHTML = `<img src="${currentPlant.images[0]}" class="w-full h-full object-cover">`;
+            } else {
+                detailMainImage.innerHTML = `
+                    <div class="w-full h-full flex items-center justify-center text-gray-400">
+                        <div class="text-center">
+                            <i class="fa fa-camera text-4xl mb-2"></i>
+                            <p class="text-sm">暂无主图</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderGallery() {
+            const detailGallery = document.getElementById('detailGallery');
+            detailGallery.innerHTML = '';
+            const images = currentPlant.images || [];
+            for (let i = 0; i < 6; i++) {
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'aspect-square bg-gray-100 rounded-lg overflow-hidden';
+                if (i < images.length) {
+                    imgContainer.innerHTML = `<img src="${images[i]}" class="w-full h-full object-cover">`;
+                } else {
+                    imgContainer.innerHTML = `
+                        <div class="w-full h-full flex items-center justify-center text-gray-300">
+                            <i class="fa fa-plus text-xl"></i>
+                        </div>
+                    `;
+                }
+                detailGallery.appendChild(imgContainer);
+            }
+        }
+
+        function setupEventListeners() {
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const page = btn.dataset.page;
+                    navBtns.forEach(b => {
+                        b.classList.remove('text-primary');
+                        b.classList.add('text-gray-500');
+                    });
+                    btn.classList.remove('text-gray-500');
+                    btn.classList.add('text-primary');
+                    
+                    browsePage.classList.add('hidden');
+                    favoritesPage.classList.add('hidden');
+                    mapPage.classList.add('hidden');
+                    aboutPage.classList.add('hidden');
+                    detailPage.classList.add('hidden');
+                    detailPage.classList.remove('flex');
+                    
+                    if (page === 'browse') {
+                        browsePage.classList.remove('hidden');
+                        browsePage.classList.add('flex');
+                    } else if (page === 'favorites') {
+                        favoritesPage.classList.remove('hidden');
+                        favoritesPage.classList.add('flex');
+                        renderFavoritesList();
+                    } else if (page === 'map') {
+                        mapPage.classList.remove('hidden');
+                        mapPage.classList.add('flex');
+                    } else if (page === 'about') {
+                        aboutPage.classList.remove('hidden');
+                        aboutPage.classList.add('flex');
+                    }
+                });
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                currentFilter.search = e.target.value;
+                renderPlantList();
+            });
+
+            lifeFilters.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    lifeFilters.forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white');
+                        b.classList.add('bg-gray-100', 'hover:bg-gray-200');
+                    });
+                    btn.classList.remove('bg-gray-100', 'hover:bg-gray-200');
+                    btn.classList.add('bg-primary', 'text-white');
+                    currentFilter.type = btn.dataset.type;
+                    renderPlantList();
+                });
+            });
+
+            document.getElementById('backBtn').addEventListener('click', () => {
+                detailPage.classList.add('hidden');
+                detailPage.classList.remove('flex');
+                browsePage.classList.remove('hidden');
+                browsePage.classList.add('flex');
+            });
+
+            document.getElementById('favoriteBtn').addEventListener('click', () => {
+                if (currentPlant) {
+                    toggleFavorite(currentPlant.id);
+                    const isFavorite = favorites.includes(currentPlant.id);
+                    document.getElementById('favoriteBtn').innerHTML = `<i class="fa ${isFavorite ? 'fa-heart text-red-500' : 'fa-heart-o'}"></i>`;
+                    renderPlantList();
+                    updateFavoritesUI();
+                }
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
